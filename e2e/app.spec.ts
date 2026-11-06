@@ -26,7 +26,7 @@ for (const size of sizes)
     await page.setViewportSize(size);
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    await page.goto("/");
+    await page.goto("/lobby");
     await expect(
       page.getByRole("heading", { name: /学びを、.*あなたの一手に。/ }),
     ).toBeVisible();
@@ -89,7 +89,7 @@ for (const size of sizes)
       .getByRole("button", { name: "実戦のテーブルを見てみる" })
       .click();
     await page.getByRole("button", { name: "演出をスキップ →" }).click();
-    await expect(page.getByText("Coming Soon")).toBeVisible();
+    await expect(page.getByText("見学専用 · Coming Soon")).toBeVisible();
     await settle(page);
     await page.screenshot({
       path: `test-results/casino-${size.width}.png`,
@@ -107,7 +107,7 @@ for (const size of sizes)
   });
 test("縦画面は回転案内", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await page.goto("/lobby");
   await expect(page.getByText("テーブルを、横向きに。")).toBeVisible();
 });
 test("すべての教材の操作と30問を完了できる", async ({ page }) => {

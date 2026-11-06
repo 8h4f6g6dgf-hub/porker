@@ -1,0 +1,739 @@
+.immersive-shell {
+  height: 100dvh;
+  overflow: hidden;
+}
+.immersive-shell > .header,
+.immersive-shell > footer {
+  display: none;
+}
+.immersive-shell > .storage-error {
+  position: fixed;
+  top: 64px;
+  z-index: 30;
+  width: 100%;
+}
+.immersive {
+  position: relative;
+  height: 100dvh;
+  min-height: 360px;
+  overflow: hidden;
+  background: #090d0b;
+  color: #f1eddf;
+  isolation: isolate;
+}
+.scene-viewport {
+  position: absolute;
+  inset: 0;
+}
+.scene-viewport > div {
+  width: 100%;
+  height: 100%;
+}
+.scene-loading {
+  display: grid;
+  place-items: center;
+  color: #c9af7b;
+  font-size: 13px;
+  letter-spacing: 3px;
+}
+.cinema-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      #050907b0,
+      transparent 24%,
+      transparent 63%,
+      #060b09b8 83%,
+      #060b09f5
+    ),
+    radial-gradient(ellipse at 50% 45%, transparent 35%, #050a0860 100%);
+}
+.experience-top {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 23px max(4vw, env(safe-area-inset-right)) 16px
+    max(4vw, env(safe-area-inset-left));
+  border-bottom: 1px solid #dac08a1c;
+}
+.experience-brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  font: 27px Georgia;
+  color: #dbc28c;
+}
+.experience-brand > span {
+  font: 13px Georgia;
+  letter-spacing: 2.4px;
+  color: #ece1c7;
+}
+.experience-brand small {
+  display: block;
+  font: 6px Arial;
+  letter-spacing: 2.7px;
+  margin-top: 8px;
+  color: #aea890;
+}
+.experience-tools {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.experience-tools button,
+.experience-tools > a {
+  font-size: 10px;
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1px solid #bda97832;
+  border-radius: 3px;
+  color: #d5cfbd;
+  background: #080e0b55;
+}
+.chapter-label {
+  position: absolute;
+  left: max(4vw, env(safe-area-inset-left));
+  top: 118px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font: 9px Arial;
+  letter-spacing: 2.5px;
+  color: #cab382;
+  pointer-events: none;
+}
+.chapter-line {
+  width: 34px;
+  height: 1px;
+  background: #b99d62;
+  margin-bottom: 5px;
+}
+.chapter-label small {
+  color: #b8baab;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+.entrance-title {
+  position: absolute;
+  left: 9%;
+  top: 30%;
+  pointer-events: none;
+}
+.entrance-title > span {
+  font: 9px Arial;
+  letter-spacing: 4px;
+  color: #bea56b;
+}
+.entrance-title h1 {
+  font:
+    clamp(34px, 4vw, 64px)/1.6 "Yu Mincho",
+    Georgia,
+    serif;
+  letter-spacing: 5px;
+  margin: 20px 0;
+}
+.entrance-title em {
+  font: inherit;
+  color: #dfc48d;
+  background: none;
+  padding: 0;
+}
+.entrance-title p {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #b0b8a9;
+}
+.experience-console {
+  position: absolute;
+  z-index: 4;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 max(4vw, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(4vw, env(safe-area-inset-left));
+  background: linear-gradient(transparent, #09100cce 25%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.dealer-caption {
+  max-width: 850px;
+  text-align: center;
+  margin: 0 auto 18px;
+}
+.dealer-caption-label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  font: 8px Arial;
+  letter-spacing: 2px;
+  color: #c7ae77;
+}
+.dealer-caption-label > span:last-child {
+  border-left: 1px solid #b8a57844;
+  padding-left: 12px;
+  color: #939e8b;
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+.quiet-dot,
+.speaking-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #bea477;
+}
+.speaking-dot {
+  box-shadow: 0 0 8px #ffe3a2;
+  animation: voice-pulse 1s infinite alternate;
+}
+.dealer-caption p {
+  font-size: 14px;
+  line-height: 1.9;
+  letter-spacing: 0.6px;
+  margin: 10px 0 0;
+  text-shadow: 0 2px 8px #000;
+  white-space: normal;
+  text-wrap: pretty;
+}
+.audio-notice {
+  display: block;
+  font-size: 10px;
+  color: #d5ba82;
+  margin-top: 6px;
+}
+.experience-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 48px;
+}
+.experience-actions button,
+.experience-actions .button {
+  font-size: 11px;
+  min-height: 44px;
+  letter-spacing: 0.4px;
+  background: #0d1912b3;
+}
+.experience-actions .primary {
+  background: #d0b47a;
+  color: #142118;
+  min-width: 180px;
+}
+.experience-menu {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr;
+  max-width: 900px;
+  width: 100%;
+  border: 1px solid #b39b6038;
+  background: #0a130eda;
+  backdrop-filter: blur(10px);
+}
+.experience-menu > button,
+.experience-menu > a {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border: 0;
+  border-right: 1px solid #b39b6038;
+  padding: 18px 25px;
+  gap: 8px;
+  border-radius: 0;
+  min-height: 110px;
+}
+.experience-menu > button {
+  background: #9d885317;
+}
+.experience-menu > a:last-child {
+  border-right: 0;
+}
+.experience-menu span {
+  font: 7px Arial;
+  letter-spacing: 2px;
+  color: #ac9669;
+}
+.experience-menu strong {
+  font: 20px Georgia;
+  letter-spacing: 2px;
+  font-weight: 400;
+  color: #e3d5b2;
+  width: 100%;
+}
+.experience-menu b {
+  float: right;
+  font-size: 19px;
+  color: #c5ab76;
+  font-weight: 400;
+}
+.experience-menu small {
+  font-size: 10px;
+  color: #95a18f;
+}
+.experience-menu-main:hover {
+  background: #c1a36c21 !important;
+}
+.experience-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  border-top: 1px solid #bda77621;
+  margin-top: 18px;
+  padding-top: 6px;
+}
+.experience-bottom > div {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.experience-bottom button,
+.experience-bottom a {
+  min-height: 44px;
+  padding: 6px 0;
+  font-size: 9px;
+  color: #a1ae9d;
+  border: 0;
+  background: none;
+  letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+}
+.experience-bottom > div > span {
+  font: 7px Arial;
+  letter-spacing: 2px;
+  color: #788e7b;
+}
+.audio-popover {
+  position: absolute;
+  z-index: 20;
+  right: max(4vw, env(safe-area-inset-right));
+  top: 85px;
+  width: min(330px, 70vw);
+  padding: 20px 22px;
+  background: #111f19f5;
+  box-shadow: 0 10px 80px #0008;
+  border: 1px solid #b79f6655;
+  max-height: calc(100dvh - 95px);
+  overflow: auto;
+  backdrop-filter: blur(15px);
+}
+.audio-popover h2 {
+  font-size: 15px;
+  margin-bottom: 18px;
+}
+.audio-popover label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  margin: 16px 0;
+}
+.audio-popover input[type="range"] {
+  width: 135px;
+  accent-color: #cbb37b;
+  min-height: 32px;
+}
+.audio-popover input[type="checkbox"] {
+  accent-color: #cbb37b;
+  width: 18px;
+  height: 18px;
+}
+.audio-popover select {
+  max-width: 175px;
+  background: #0d1511;
+  border: 1px solid #a8956955;
+  color: #dacba9;
+  padding: 8px;
+  font-size: 10px;
+}
+.audio-popover p {
+  font-size: 10px;
+  color: #92a38f;
+}
+.audio-popover button {
+  font-size: 10px;
+  min-height: 44px;
+}
+.audio-popover .popover-close {
+  float: right;
+  border: 0;
+  padding: 0;
+  min-height: 24px;
+  color: #b5ac94;
+}
+.reveal-actions {
+  display: flex;
+  gap: 12px;
+}
+.reveal-actions button {
+  border-color: #bea66d77;
+  color: #e1c38b;
+}
+.reveal-actions button:disabled {
+  opacity: 0.8;
+  color: #d6ddba;
+}
+.intro-quiz {
+  display: flex;
+  gap: 15px;
+}
+.intro-quiz button {
+  width: 120px;
+  font: 22px Georgia;
+  color: #e4ce9f;
+  background: #0a160cbb;
+  border: 1px solid #a7916255;
+  min-height: 54px;
+}
+.result-pass,
+.result-retry,
+.preview-note {
+  font-size: 11px;
+  color: #bdd0ab;
+  letter-spacing: 1px;
+}
+.result-retry {
+  color: #d8b07f;
+}
+.preview-note {
+  color: #c6ad7d;
+}
+.intro-sources {
+  position: absolute;
+  bottom: 70px;
+  right: 4vw;
+  max-width: 420px;
+  max-height: 55dvh;
+  overflow: auto;
+  background: #122019f5;
+  padding: 0 20px;
+  border: 1px solid #b49e6744;
+}
+.immersive-fallback {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 160px;
+  background: radial-gradient(ellipse at center, #395b4033, transparent 70%);
+}
+.immersive-fallback .table-scene {
+  max-width: 850px;
+}
+.immersive-fallback > p {
+  font-size: 10px;
+  color: #a5ac97;
+}
+.scene-fallback {
+  display: grid;
+  place-items: center;
+  padding: 60px;
+  text-align: center;
+  color: #c5b78b;
+}
+.immersive[data-phase="entrance"] .scene-viewport {
+  animation: room-arrival 2s ease-out;
+}
+.immersive .scene-viewport canvas {
+  touch-action: manipulation;
+}
+.immersive-casino .chapter-label {
+  color: #e6bc66;
+}
+@keyframes room-arrival {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes voice-pulse {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  .immersive {
+    min-height: 320px;
+  }
+  .experience-top {
+    padding: 5px max(3vw, env(safe-area-inset-right)) 5px
+      max(3vw, env(safe-area-inset-left));
+  }
+  .experience-brand {
+    font-size: 24px;
+    gap: 9px;
+  }
+  .experience-brand > span {
+    font-size: 10px;
+    letter-spacing: 1.6px;
+  }
+  .experience-brand small {
+    font-size: 5px;
+    letter-spacing: 1.7px;
+    margin-top: 5px;
+  }
+  .experience-tools {
+    gap: 8px;
+  }
+  .experience-tools button,
+  .experience-tools > a {
+    font-size: 9px;
+    padding: 8px 11px;
+    min-height: 44px;
+  }
+  .chapter-label {
+    top: 73px;
+    left: 3vw;
+    gap: 5px;
+    font-size: 7px;
+    letter-spacing: 1.3px;
+  }
+  .chapter-label small {
+    font-size: 8px;
+  }
+  .chapter-line {
+    width: 22px;
+    margin-bottom: 2px;
+  }
+  .entrance-title {
+    top: 28%;
+    left: 7%;
+  }
+  .entrance-title h1 {
+    font-size: 28px;
+    line-height: 1.45;
+    letter-spacing: 2px;
+    margin: 10px 0;
+  }
+  .entrance-title > span {
+    font-size: 7px;
+    letter-spacing: 2px;
+  }
+  .entrance-title p {
+    font-size: 9px;
+  }
+  .experience-console {
+    padding: 0 max(3vw, env(safe-area-inset-right))
+      max(3px, env(safe-area-inset-bottom)) max(3vw, env(safe-area-inset-left));
+  }
+  .dealer-caption {
+    max-width: 78%;
+    margin-bottom: 7px;
+  }
+  .dealer-caption-label {
+    font-size: 6px;
+    gap: 7px;
+    letter-spacing: 1.3px;
+  }
+  .dealer-caption-label > span:last-child {
+    font-size: 6px;
+  }
+  .dealer-caption p {
+    font-size: 11px;
+    line-height: 1.65;
+    margin-top: 6px;
+    letter-spacing: 0.2px;
+  }
+  .experience-actions {
+    gap: 10px;
+  }
+  .experience-actions button,
+  .experience-actions .button {
+    font-size: 10px;
+    padding: 8px 13px;
+    min-height: 44px;
+  }
+  .experience-actions .primary {
+    min-width: 150px;
+  }
+  .experience-bottom {
+    margin-top: 7px;
+    padding-top: 0;
+    gap: 8px;
+  }
+  .experience-bottom > div {
+    gap: 12px;
+  }
+  .experience-bottom button,
+  .experience-bottom a {
+    font-size: 8px;
+    min-height: 34px;
+  }
+  .experience-bottom > div > span {
+    font-size: 6px;
+    letter-spacing: 1px;
+  }
+  .experience-menu {
+    max-width: 700px;
+  }
+  .experience-menu > button,
+  .experience-menu > a {
+    padding: 10px 18px;
+    gap: 5px;
+    min-height: 78px;
+  }
+  .experience-menu strong {
+    font-size: 16px;
+  }
+  .experience-menu small {
+    font-size: 8px;
+  }
+  .experience-menu span {
+    font-size: 6px;
+  }
+  .intro-quiz button {
+    width: 105px;
+    font-size: 18px;
+  }
+  .audio-popover {
+    top: 58px;
+    max-height: calc(100dvh - 65px);
+    padding: 14px 18px;
+  }
+  .audio-popover label {
+    margin: 8px 0;
+  }
+  .audio-popover h2 {
+    margin-bottom: 12px;
+  }
+  .audio-notice {
+    font-size: 8px;
+  }
+  .immersive-fallback {
+    padding-bottom: 120px;
+  }
+  .immersive-fallback .table-scene {
+    height: 210px;
+    max-width: 470px;
+    --card-w: 40px;
+  }
+  .result-pass,
+  .result-retry,
+  .preview-note {
+    font-size: 9px;
+  }
+}
+@media (max-width: 700px) and (orientation: landscape) {
+  .experience-brand small {
+    display: none;
+  }
+  .experience-tools {
+    gap: 5px;
+  }
+  .experience-tools button,
+  .experience-tools > a {
+    padding: 8px;
+  }
+  .experience-menu {
+    max-width: 590px;
+  }
+  .experience-menu > button,
+  .experience-menu > a {
+    padding: 10px 12px;
+  }
+  .experience-menu strong {
+    font-size: 14px;
+  }
+  .experience-bottom > div > span {
+    display: none;
+  }
+  .dealer-caption {
+    max-width: 90%;
+  }
+  .chapter-label small {
+    max-width: 110px;
+    line-height: 1.5;
+  }
+  .experience-bottom > div {
+    gap: 10px;
+  }
+  .intro-quiz button {
+    width: 90px;
+  }
+  .experience-bottom button,
+  .experience-bottom a {
+    min-height: 36px;
+  }
+  .experience-actions {
+    gap: 8px;
+  }
+  .reveal-actions {
+    gap: 7px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .immersive * {
+    animation: none !important;
+  }
+}
+.reduce-motion .immersive * {
+  animation: none !important;
+}
+.fallback-hole {
+  display: flex;
+  gap: 12px;
+  --card-w: 60px;
+  margin-top: -60px;
+  z-index: 1;
+}
+.immersive-fallback > p {
+  margin-top: 20px;
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  .fallback-hole {
+    --card-w: 44px;
+    margin-top: -45px;
+  }
+  .immersive-fallback > p {
+    margin-top: 9px;
+  }
+}
+/* Reserve a clear table window above the subtitle and controls. */
+.scene-viewport {
+  bottom: 155px;
+}
+.immersive[data-phase="entrance"] .scene-viewport {
+  bottom: 0;
+}
+.immersive[data-phase="choose"] .scene-viewport {
+  bottom: 170px;
+}
+@media (max-height: 600px) and (orientation: landscape) {
+  .scene-viewport {
+    bottom: 128px;
+  }
+  .immersive[data-phase="choose"] .scene-viewport {
+    bottom: 135px;
+  }
+  .immersive[data-phase="hand"] .scene-viewport {
+    bottom: 150px;
+  }
+  .dealer-caption {
+    margin-bottom: 5px;
+  }
+  .experience-bottom {
+    margin-top: 4px;
+  }
+  .experience-bottom button,
+  .experience-bottom a {
+    min-height: 32px;
+  }
+}

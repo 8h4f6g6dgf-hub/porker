@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import App from "../App";
 import { LearningProvider } from "../persistence/context";
 import { localRepository } from "../persistence/storage";
-function renderApp(path = "/") {
+function renderApp(path = "/lobby") {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <LearningProvider>
@@ -53,7 +53,7 @@ it("ロビーから開始、操作、回答、根拠、修了、保存復元、C
     screen.getByRole("button", { name: "実戦のテーブルを見てみる" }),
   );
   fireEvent.click(screen.getByRole("button", { name: "演出をスキップ →" }));
-  expect(screen.getByText("Coming Soon")).toBeInTheDocument();
+  await waitFor(() => expect(screen.getAllByText(/Coming Soon/).length).toBeGreaterThan(0));
 });
 it("不正解にも解説を表示し、二重回答しない", () => {
   renderApp("/lesson/lesson-01");

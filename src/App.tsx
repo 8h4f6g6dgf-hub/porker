@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import {
   Link,
   NavLink,
@@ -25,6 +25,7 @@ import {
 } from "./components/Learning";
 import { evaluate, grade } from "./domain/poker";
 import type { Card, Lesson } from "./domain/types";
+const Experience = lazy(() => import("./immersive/Experience"));
 const num = (n: number) => String(n).padStart(2, "0");
 const rate = (n: number | null) => (n === null ? "—" : `${n}%`);
 function useStats() {
@@ -47,10 +48,11 @@ function lessonStatus(l: Lesson, data: ReturnType<typeof useLearning>["data"]) {
 export default function App() {
   const { data, error } = useLearning();
   const location = useLocation();
+  const immersive = ["/", "/experience", "/casino"].includes(location.pathname);
   return (
     <MotionConfig reducedMotion={data.reducedMotion ? "always" : "user"}>
       <div
-        className={`app ${location.pathname === "/casino" ? "casino-mode" : ""} ${data.reducedMotion ? "reduce-motion" : ""}`}
+        className={`app ${immersive ? "immersive-shell" : ""} ${location.pathname === "/casino" ? "casino-mode" : ""} ${data.reducedMotion ? "reduce-motion" : ""}`}
       >
         <div className="rotate-notice">
           <span>↻</span>
@@ -87,10 +89,38 @@ export default function App() {
           </div>
         )}
         <Routes>
-          <Route path="/" element={<Lobby />} />
+          <Route
+            path="/"
+            element={
+              <Suspense
+                fallback={
+                  <main className="page">テーブルを準備しています…</main>
+                }
+              >
+                <Experience />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/experience"
+            element={
+              <Suspense fallback={null}>
+                <Experience />
+              </Suspense>
+            }
+          />
+          <Route path="/lobby" element={<Lobby />} />
           <Route path="/academy" element={<Academy />} />
           <Route path="/lesson/:id" element={<LessonRoute />} />
-          <Route path="/casino" element={<Casino />} />
+          <Route
+            path="/casino"
+            element={
+              <Suspense fallback={null}>
+                <Experience mode="casino" />
+              </Suspense>
+            }
+          />
+          <Route path="/casino/classic" element={<Casino />} />
           <Route path="/room" element={<Room />} />
           <Route path="/settings" element={<Settings />} />
           <Route
@@ -108,7 +138,7 @@ export default function App() {
             POKER ACADEMY <i>◆</i> EST. 2026
           </span>
           <span>知識を、一手の自信へ。</span>
-          <span>VERSION 0.1 · 無料学習</span>
+          <span>VERSION 2.0 · 無料学習</span>
         </footer>
       </div>
     </MotionConfig>

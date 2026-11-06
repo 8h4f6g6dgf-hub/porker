@@ -14,3 +14,6 @@ Object.defineProperty(window, "matchMedia", {
     removeEventListener() {},
   }),
 });
+// jsdom has no GPU: exercise the accessible lightweight fallback in UI tests.
+HTMLCanvasElement.prototype.getContext = (() =>
+  null) as typeof HTMLCanvasElement.prototype.getContext;
