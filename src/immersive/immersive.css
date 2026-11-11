@@ -737,3 +737,6 @@
     min-height: 32px;
   }
 }
+
+/* Japanese kinsoku: retain all narration, wrap at natural boundaries. */
+.dealer-caption p { line-break: strict; word-break: normal; overflow-wrap: normal; text-wrap: pretty; max-inline-size: 44em; line-height: 1.75; }

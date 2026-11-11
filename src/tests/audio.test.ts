@@ -31,8 +31,7 @@ it("音声と効果音の音量を独立保持し、効果音変更で読み上�
       }));
     });
     act(() => result.current.speak("ようこそ"));
-    expect(speak).toHaveBeenCalledTimes(1);
-    expect(speak.mock.calls[0][0].volume).toBe(0);
+    expect(speak).not.toHaveBeenCalled();
     const fn = result.current.speak;
     act(() =>
       result.current.setPreferences((p) => ({ ...p, effectsVolume: 0.1 })),

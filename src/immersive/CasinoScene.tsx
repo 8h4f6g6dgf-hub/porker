@@ -17,6 +17,8 @@ export interface CasinoSceneProps {
   mode?: "academy" | "casino";
   onReady?: () => void;
 }
+// Seated camera stays fixed; pitch offset is independently tunable.
+export const CAMERA_DOWNWARD_DEGREES = 3;
 const GOLD = "#b89858";
 const WHITE = "#acafa6";
 const phases = [
@@ -63,6 +65,7 @@ function CameraRail({
       1 - Math.exp(-dt * 2),
     );
     camera.lookAt(look.current);
+    if (!entrance) camera.rotateX(-THREE.MathUtils.degToRad(CAMERA_DOWNWARD_DEGREES));
   });
   return null;
 }
@@ -501,7 +504,7 @@ function Chips() {
     for (let col = 0; col < 3; col++)
       for (let i = 0; i < (col === 1 ? 7 : 4); i++) {
         const x = 1.35 + col * 0.24,
-          y = 0.82 + i * 0.028,
+          y = 0.801 + i * 0.027,
           z = 1.06 + (col % 2) * 0.11;
         const disk = new THREE.CylinderGeometry(
           0.105,
@@ -589,7 +592,7 @@ function Card({
       group.current.position.set(
         THREE.MathUtils.lerp(-0.15, position[0], eased),
         position[1] +
-          Math.sin(p * Math.PI) * 0.12 +
+          Math.sin(p * Math.PI) * 0.018 +
           (flip.current ? Math.sin(flip.current.rotation.y) * 0.27 : 0),
         THREE.MathUtils.lerp(-1.22, position[2], eased),
       );
@@ -632,65 +635,19 @@ function Card({
           }}
         >
           <mesh castShadow>
-            <boxGeometry args={[0.49, 0.7, 0.012]} />
+            <boxGeometry args={[0.5, 0.7, 0.0024]} />
             <meshStandardMaterial color="#e5dcc4" roughness={0.8} />
           </mesh>
-          <mesh position={[0, 0, 0.007]}>
-            <planeGeometry args={[0.485, 0.695]} />
+          <mesh position={[0, 0, 0.0013]}>
+            <planeGeometry args={[0.5, 0.7]} />
             <meshStandardMaterial map={textures[0]} roughness={0.72} />
           </mesh>
-          <mesh position={[0, 0, -0.007]} rotation={[0, Math.PI, 0]}>
-            <planeGeometry args={[0.485, 0.695]} />
+          <mesh position={[0, 0, -0.0013]} rotation={[0, Math.PI, 0]}>
+            <planeGeometry args={[0.5, 0.7]} />
             <meshStandardMaterial map={textures[1]} roughness={0.7} />
           </mesh>
         </group>
       </group>
-    </group>
-  );
-}
-function DealerDeck({
-  phase,
-  reducedMotion,
-}: {
-  phase: string;
-  reducedMotion: boolean;
-}) {
-  const halves = useRef<THREE.Group[]>([]);
-  useFrame(({ clock }) => {
-    const shuffle =
-      !reducedMotion && ["entrance", "seat", "choose"].includes(phase);
-    halves.current.forEach((g, i) => {
-      const sign = i === 0 ? -1 : 1;
-      g.position.x = shuffle
-        ? sign * (0.03 + Math.abs(Math.sin(clock.elapsedTime * 1.3)) * 0.14)
-        : 0;
-      g.position.y =
-        i * 0.035 + (shuffle ? Math.sin(clock.elapsedTime * 2 + i) * 0.014 : 0);
-      g.rotation.z = shuffle
-        ? sign * Math.sin(clock.elapsedTime * 1.3) * 0.05
-        : 0;
-    });
-  });
-  return (
-    <group position={[-0.1, 0.83, -1.25]} rotation={[0, 0.13, 0]}>
-      {[0, 1].map((half) => (
-        <group
-          key={half}
-          ref={(el) => {
-            if (el) halves.current[half] = el;
-          }}
-        >
-          {[0, 1, 2].map((i) => (
-            <mesh key={i} position={[0, i * 0.014, 0]} castShadow>
-              <boxGeometry args={[0.48, 0.012, 0.69]} />
-              <meshStandardMaterial
-                color={i === 2 ? "#234535" : "#d4c9ad"}
-                roughness={0.7}
-              />
-            </mesh>
-          ))}
-        </group>
-      ))}
     </group>
   );
 }
@@ -705,7 +662,7 @@ function Cards(props: CasinoSceneProps) {
           <Card
             key={`hole-${i}`}
             index={i}
-            position={[i === 0 ? -0.31 : 0.31, 0.84, 1.12]}
+            position={[i === 0 ? -0.31 : 0.31, 0.790, 1.12]}
             rank={i === 0 ? "A" : "K"}
             suit="♥"
             face={props.revealed[i] ?? false}
@@ -718,7 +675,7 @@ function Cards(props: CasinoSceneProps) {
         <Card
           key={`board-${i}`}
           index={i + 2}
-          position={[(i - 2) * 0.55, 0.82, -0.02]}
+          position={[(i - 2) * 0.55, 0.790, -0.02]}
           rank={ranks[i]}
           suit={suits[i]}
           face
@@ -726,7 +683,7 @@ function Cards(props: CasinoSceneProps) {
           reducedMotion={props.reducedMotion}
         />
       ))}
-      <DealerDeck phase={props.phase} reducedMotion={props.reducedMotion} />
+
     </>
   );
 }

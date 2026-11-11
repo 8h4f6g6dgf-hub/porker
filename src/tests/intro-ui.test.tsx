@@ -76,8 +76,7 @@ it("初回案内の既読フラグと音量設定を別領域に保持する", (
   fireEvent.click(screen.getByRole("button", { name: "音声と表示の設定" }));
   const sliders = screen.getAllByRole("slider");
   fireEvent.change(sliders[0], { target: { value: "0" } });
-  fireEvent.change(sliders[1], { target: { value: "0" } });
   expect(
     JSON.parse(localStorage.getItem("poker-academy.audio.v2")!),
-  ).toMatchObject({ voiceVolume: 0, effectsVolume: 0 });
+  ).toMatchObject({ voice: false, effectsVolume: 0 });
 });

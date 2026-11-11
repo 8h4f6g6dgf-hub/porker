@@ -19,7 +19,7 @@ export function useDealerAudio() {
       );
       return v && typeof v.voice === "boolean"
         ? {
-            voice: v.voice,
+            voice: false,
             voiceVolume: Math.max(
               0,
               Math.min(1, Number.isFinite(v.voiceVolume) ? v.voiceVolume : 0.8),
@@ -83,66 +83,11 @@ export function useDealerAudio() {
       /* Optional sound effects. */
     }
   }, []);
-  const speak = useCallback(
-    (text: string, onEnd?: () => void) => {
-      stop();
-      if (!preferences.voice || !unlocked) {
-        onEnd?.();
-        return;
-      }
-      if (!supported) {
-        setNotice(
-          "このブラウザは音声合成に対応していません。字幕で進められます。",
-        );
-        onEnd?.();
-        return;
-      }
-      const voice =
-        voices.find((v) => v.voiceURI === preferences.voiceURI) ??
-        voices.find((v) => /Otoya|Ichiro|Keita|男性/i.test(v.name)) ??
-        voices[0];
-      if (!voice) {
-        setNotice("日本語の音声が見つかりません。字幕で進められます。");
-        onEnd?.();
-        return;
-      }
-      const id = generation.current;
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "ja-JP";
-      utterance.voice = voice;
-      utterance.pitch = 0.82;
-      utterance.rate = 0.9;
-      utterance.volume = preferences.voiceVolume;
-      completion.current = onEnd;
-      setSpeaking(true);
-      setNotice("");
-      utterance.onend = () => {
-        if (id !== generation.current) return;
-        setSpeaking(false);
-        completion.current?.();
-        completion.current = undefined;
-      };
-      utterance.onerror = () => {
-        if (id !== generation.current) return;
-        setSpeaking(false);
-        setNotice(
-          "音声を再生できませんでした。再生ボタン、または字幕で進めてください。",
-        );
-        completion.current?.();
-        completion.current = undefined;
-      };
-      speechSynthesis.speak(utterance);
-    },
-    [
-      stop,
-      preferences.voice,
-      preferences.voiceVolume,
-      preferences.voiceURI,
-      unlocked,
-      supported,
-      voices,
-    ],
-  );
+  // No browser TTS: voice quality cannot be guaranteed across devices.
+  const speak = useCallback((_text: string, onEnd?: () => void) => {
+    stop();
+    onEnd?.();
+  }, [stop]);
   const effect = useCallback(
     (kind: "card" | "answer" = "card") => {
       const ctx = audioContext.current;

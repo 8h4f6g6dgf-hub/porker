@@ -264,15 +264,7 @@ export default function Experience({
           </span>
         </Link>
         <div className="experience-tools">
-          <button
-            onClick={() => {
-              audio.unlock();
-              audio.setPreferences((p) => ({ ...p, voice: !p.voice }));
-            }}
-            aria-pressed={audio.preferences.voice}
-          >
-            音声 {audio.preferences.voice ? "ON" : "OFF"}
-          </button>
+          <span>字幕ガイド</span>
           <button
             aria-label="音声と表示の設定"
             onClick={() => setAudioOpen((v) => !v)}
@@ -311,22 +303,6 @@ export default function Experience({
           </button>
           <h2>テーブルの音と表示</h2>
           <label>
-            ディーラー音量
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step=".05"
-              value={audio.preferences.voiceVolume}
-              onChange={(e) =>
-                audio.setPreferences((p) => ({
-                  ...p,
-                  voiceVolume: Number(e.target.value),
-                }))
-              }
-            />
-          </label>
-          <label>
             効果音量
             <input
               type="range"
@@ -342,28 +318,7 @@ export default function Experience({
               }
             />
           </label>
-          <label>
-            日本語音声
-            <select
-              value={audio.preferences.voiceURI}
-              onChange={(e) =>
-                audio.setPreferences((p) => ({
-                  ...p,
-                  voiceURI: e.target.value,
-                }))
-              }
-            >
-              <option value="">自動選択</option>
-              {audio.voices.map((v) => (
-                <option value={v.voiceURI} key={v.voiceURI}>
-                  {v.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <p>
-            端末の日本語音声を使います。低めの声に調整しますが、男性の声がない端末もあります。
-          </p>
+          <p>字幕と効果音でご案内します。</p>
           <label>
             <input
               type="checkbox"
@@ -554,18 +509,6 @@ export default function Experience({
               >
                 ← 戻る
               </button>
-            )}
-            <button
-              onClick={() => {
-                audio.unlock();
-                audio.setPreferences((p) => ({ ...p, voice: true }));
-                audio.speak(text);
-              }}
-            >
-              音声を再生 ↺
-            </button>
-            {audio.speaking && (
-              <button onClick={audio.stop}>音声をスキップ</button>
             )}
           </div>
           <div>
