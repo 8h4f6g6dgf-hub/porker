@@ -32,6 +32,11 @@ for (const viewport of [
     await page.screenshot({
       path: `test-results/immersive-${viewport.width}.png`,
     });
+    await page.getByRole("button", { name: "次の字幕", exact: true }).click();
+    await expect(page.locator(".caption-page")).toContainText("チップを賭けるベットを行います。");
+    await page.locator(".caption-page").evaluate(async el => { await Promise.all(el.getAnimations().map(a => a.finished)); });
+    await page.screenshot({ path: `test-results/captions-${viewport.width}.png` });
+    expect(await page.locator(".caption-page").evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
     await page.getByRole("button", { name: "最初のクイズへ →" }).click();
     await page.getByRole("button", { name: "2枚", exact: true }).click();
     await expect(page.getByRole("status")).toContainText("正解");

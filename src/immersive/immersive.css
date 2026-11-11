@@ -740,3 +740,20 @@
 
 /* Japanese kinsoku: retain all narration, wrap at natural boundaries. */
 .dealer-caption p { line-break: strict; word-break: normal; overflow-wrap: normal; text-wrap: pretty; max-inline-size: 44em; line-height: 1.75; }
+
+/* Caption overlay only: the 3D viewport and camera remain untouched. */
+.dealer-caption { position: absolute; bottom: calc(100% + 12px); width: min(90vw, 880px); max-width: none; margin: 0; }
+.dealer-caption p { font-size: 18px; line-height: 1.65; letter-spacing: .02em; margin: 8px 0 0; min-height: 3.3em; }
+.caption-row { display: block; white-space: nowrap; }
+.caption-page { animation: caption-fade 180ms ease-out; }
+.caption-still { animation: none; }
+.caption-navigation { display: flex; justify-content: center; align-items: center; gap: 12px; min-height: 32px; font-size: 11px; color: #c7ae77; }
+.caption-navigation button { background: transparent; border: 0; color: inherit; min-width: 36px; min-height: 32px; cursor: pointer; }
+.caption-navigation button:disabled { opacity: .3; cursor: default; }
+@keyframes caption-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (max-height: 600px) and (orientation: landscape) {
+ .dealer-caption { bottom: calc(100% + 2px); width: 94vw; }
+ .dealer-caption p { font-size: 14px; line-height: 1.5; margin-top: 5px; min-height: 3em; }
+ .caption-navigation { min-height: 26px; gap: 10px; }
+ .caption-navigation button { min-height: 26px; }
+}

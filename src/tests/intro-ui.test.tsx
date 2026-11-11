@@ -40,10 +40,10 @@ it("軽量表示で両手札をめくり、導入クイズを保存。既存進�
       screen.getByRole("button", { name: "ハンドについて聞く →" }),
     );
     for (let i = 0; i < 3; i++) {
-      act(() => vi.advanceTimersByTime(1200));
+      act(() => vi.advanceTimersByTime(1500));
       fireEvent.click(screen.getByRole("button", { name: "次へ進む →" }));
     }
-    act(() => vi.advanceTimersByTime(1200));
+    act(() => vi.advanceTimersByTime(1500));
     fireEvent.click(screen.getByRole("button", { name: "最初のクイズへ →" }));
     const answer = screen.getByRole("button", { name: "3枚" });
     fireEvent.click(answer);

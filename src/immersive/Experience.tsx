@@ -23,6 +23,7 @@ import {
 } from "./scenario";
 import { useDealerAudio } from "./audio";
 import "./immersive.css";
+import { Captions } from "./Captions";
 const Scene = lazy(() => import("./CasinoScene"));
 class SceneBoundary extends Component<
   { children: ReactNode; fallback: ReactNode; onError: () => void },
@@ -129,7 +130,7 @@ export default function Experience({
     setBusy(["deal", "flop", "turn", "river"].includes(phase));
     const t = setTimeout(
       () => setBusy(false),
-      reduced ? 0 : phase === "deal" ? 2100 : 1000,
+      reduced ? 0 : phase === "deal" ? 2100 : 1400,
     );
     return () => clearTimeout(t);
   }, [phase, reduced]);
@@ -345,9 +346,7 @@ export default function Experience({
             <span className={audio.speaking ? "speaking-dot" : "quiet-dot"} />{" "}
             YOUR DEALER <span>日本語ガイド</span>
           </div>
-          <p key={phase} aria-live="polite">
-            {text}
-          </p>
+          <Captions key={`${mode}-${phase}`} lines={lines} busy={busy} reduced={reduced} />
           {audio.notice && (
             <small className="audio-notice" role="status">
               {audio.notice}
