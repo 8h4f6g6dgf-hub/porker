@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+
 
 // Explicit editorial boundaries preserve every character of the lesson script.
 const breaks: Record<string, string[]> = {
@@ -13,6 +13,12 @@ const breaks: Record<string, string[]> = {
   "CPU・オンライン対戦は Coming Soon。": ["CPU・オンライン対戦は Coming Soon。"],
 };
 export function captionPages(lines: readonly string[]): string[][] {
+  if (lines.join("") === "最後の1枚がリバーです。実際のゲームでは、各段階の間にチップを賭けるベットを行います。いまはカードの流れを見ています。") return [
+    ["最後の1枚がリバーです。"],
+    ["実際のゲームでは、各段階の間にチップを賭けるベットを行います。", "いまはカードの流れを見ています。"],
+  ];
+  if (lines[0] === "実戦の舞台へ、ようこそ。") return [[...lines]];
+  if (lines[0] === "最初の一歩ができました。") return [[...lines]];
   return lines.flatMap(line => (line.match(/[^。！？]+[。！？]?/gu) ?? [line]).flatMap(sentence => {
     const rows = breaks[sentence] ?? [sentence];
     const pages: string[][] = [];
@@ -20,24 +26,12 @@ export function captionPages(lines: readonly string[]): string[][] {
     return pages;
   }));
 }
-export function Captions({ lines, busy, reduced }: { lines: readonly string[]; busy: boolean; reduced: boolean }) {
+export function Captions({ lines, index, reduced }: { lines: readonly string[]; index: number; reduced: boolean }) {
   const pages = captionPages(lines);
-  const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  useEffect(() => {
-    if (busy || paused || index >= pages.length - 1) return;
-    const timer = setTimeout(() => setIndex(i => i + 1), Math.max(4200, pages[index].join("").length * 150));
-    return () => clearTimeout(timer);
-  }, [busy, paused, index, pages]);
   return <>
     <p key={index} className={`caption-page ${reduced ? "caption-still" : ""}`} aria-live="polite">
       {pages[index]?.map((row, i) => <span className="caption-row" key={i}>{row}</span>)}
     </p>
-    {pages.length > 1 && <nav className="caption-navigation" aria-label="字幕のページ">
-      <button aria-label="前の字幕" disabled={busy || index === 0} onClick={() => { setPaused(true); setIndex(i => i - 1); }}>‹</button>
-      <span>{index + 1} / {pages.length}</span>
-      <button aria-label={paused ? "字幕の自動送りを再開" : "字幕の自動送りを停止"} onClick={() => setPaused(v => !v)}>{paused ? "再開" : "一時停止"}</button>
-      <button aria-label="次の字幕" disabled={busy || index === pages.length - 1} onClick={() => { setPaused(true); setIndex(i => i + 1); }}>›</button>
-    </nav>}
+    {pages.length > 1 && <div className="caption-navigation" aria-label="字幕の進行">{index + 1} / {pages.length}</div>}
   </>;
 }

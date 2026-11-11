@@ -757,3 +757,11 @@
  .caption-navigation { min-height: 26px; gap: 10px; }
  .caption-navigation button { min-height: 26px; }
 }
+
+/* Anchor caption center independently of sentence length and console padding. */
+.dealer-caption { left: 50%; transform: translateX(-50%); text-align: center; }
+.dealer-caption p { width: 100%; max-inline-size: none; text-align: center; }
+.caption-row { text-align: center; }
+@media (max-height: 600px) and (orientation: landscape) {
+ .dealer-caption { width: min(94vw, 880px); }
+}

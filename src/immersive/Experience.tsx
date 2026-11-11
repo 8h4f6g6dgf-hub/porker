@@ -15,14 +15,13 @@ import { PokerTable, PlayingCard } from "../components/Table";
 import { sampleTable } from "../data/lessons";
 import { SourceReference } from "../components/Learning";
 import {
-  initialIntroState,
-  introReducer,
   introQuestion,
   resultLines,
   sceneFor,
 } from "./scenario";
 import { useDealerAudio } from "./audio";
 import "./immersive.css";
+import { initialProgression, progressionReducer, cueCount } from "./progression";
 import { Captions } from "./Captions";
 const Scene = lazy(() => import("./CasinoScene"));
 class SceneBoundary extends Component<
@@ -64,11 +63,7 @@ export default function Experience({
   mode?: "academy" | "casino";
 }) {
   const { data, update } = useLearning();
-  const [state, dispatch] = useReducer(
-    introReducer,
-    undefined,
-    initialIntroState,
-  );
+  const [state, dispatch] = useReducer(progressionReducer, undefined, initialProgression);
   const [seen, setSeen] = useState(seenBefore),
     [audioOpen, setAudioOpen] = useState(false),
     [details, setDetails] = useState(false),
@@ -127,13 +122,13 @@ export default function Experience({
     return audio.stop;
   }, [text, audio.speak, audio.stop]);
   useEffect(() => {
-    setBusy(["deal", "flop", "turn", "river"].includes(phase));
+    setBusy(["deal", "flop", "turn", "river"].includes(phase) || (phase === "reveal" && state.revealed.some(Boolean)));
     const t = setTimeout(
       () => setBusy(false),
       reduced ? 0 : phase === "deal" ? 2100 : 1400,
     );
     return () => clearTimeout(t);
-  }, [phase, reduced]);
+  }, [phase, reduced, state.revealed]);
   useEffect(() => {
     if (["deal", "flop", "turn", "river"].includes(phase)) audio.effect("card");
   }, [phase, audio.effect]);
@@ -143,10 +138,18 @@ export default function Experience({
     audio.effect("card");
     dispatch({ type: "REVEAL", index });
   }
+  const navigationLock = useRef(0);
+  const lastCue = state.cue >= cueCount(state) - 1;
+  function navigate(type: "NEXT" | "BACK") {
+    if (busy || Date.now() < navigationLock.current) return;
+    navigationLock.current = Date.now() + 300;
+    audio.stop();
+    dispatch({ type });
+  }
   function next() {
     audio.unlock();
     audio.stop();
-    dispatch({ type: "NEXT" });
+    navigate("NEXT");
   }
   function answer(value: string) {
     if (submitted.current || state.answer !== null || phase !== "quiz") return;
@@ -346,7 +349,7 @@ export default function Experience({
             <span className={audio.speaking ? "speaking-dot" : "quiet-dot"} />{" "}
             YOUR DEALER <span>日本語ガイド</span>
           </div>
-          <Captions key={`${mode}-${phase}`} lines={lines} busy={busy} reduced={reduced} />
+          <Captions key={`${mode}-${phase}`} lines={lines} index={state.cue} reduced={reduced} />
           {audio.notice && (
             <small className="audio-notice" role="status">
               {audio.notice}
@@ -430,14 +433,14 @@ export default function Experience({
                   </div>
                   <button
                     className="primary"
-                    disabled={!state.revealed.every(Boolean)}
+                    disabled={busy || !state.revealed.every(Boolean)}
                     onClick={next}
                   >
                     ハンドについて聞く →
                   </button>
                 </>
               )}
-              {phase === "quiz" && (
+              {phase === "quiz" && lastCue && (
                 <div className="intro-quiz" aria-label={introQuestion.prompt}>
                   {introQuestion.options.map((a) => (
                     <button onClick={() => answer(a)} key={a}>
@@ -460,12 +463,12 @@ export default function Experience({
                       ? "✓ 正解 · 最初の一手を理解しました"
                       : "正解は2枚 · 手札を確認しましょう"}
                   </span>
-                  <button className="primary" onClick={next}>
-                    学びを続ける →
+                  <button className="primary" disabled={busy} onClick={next}>
+                    {lastCue ? "学びを続ける →" : "次へ進む →"}
                   </button>
                 </>
               )}
-              {phase === "continue" && (
+              {phase === "continue" && lastCue && (
                 <>
                   <Link
                     className="button primary"
@@ -479,19 +482,17 @@ export default function Experience({
                   </Link>
                 </>
               )}
-              {["seat", "deal", "hand", "flop", "turn", "river"].includes(
-                phase,
-              ) && (
+              {(["seat", "deal", "hand", "flop", "turn", "river"].includes(phase) || (["quiz", "continue"].includes(phase) && !lastCue)) && (
                 <button className="primary" disabled={busy} onClick={next}>
                   {busy
                     ? "カードを配っています…"
-                    : phase === "seat"
+                    : !lastCue ? "次へ進む →" : phase === "seat"
                       ? "着席する →"
                       : phase === "deal"
                         ? "カードを確認する →"
                         : phase === "river"
-                          ? "最初のクイズへ →"
-                          : "次へ進む →"}
+                          ? "クイズへ進む →"
+                          : "次のチャプターへ →"}
                 </button>
               )}
             </>
@@ -501,9 +502,10 @@ export default function Experience({
           <div>
             {mode === "academy" && phase !== "entrance" && (
               <button
+                disabled={busy}
                 onClick={() => {
                   audio.stop();
-                  dispatch({ type: "BACK" });
+                  navigate("BACK");
                 }}
               >
                 ← 戻る
