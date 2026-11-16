@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { CasinoBackdrop } from "./CasinoBackdrop";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import {
   materialTexture,
@@ -70,108 +71,16 @@ function CameraRail({
   return null;
 }
 function Room({ mode }: { mode: string }) {
-  const wood = useMemo(() => materialTexture("wood"), []);
-  useEffect(() => () => wood.dispose(), [wood]);
   return (
     <group>
-      <color attach="background" args={["#080c0a"]} />
-      <fog attach="fog" args={["#0a100d", 9, 24]} />
+      <CasinoBackdrop />
+      <fog attach="fog" args={["#21190f", 14, 30]} />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
         <planeGeometry args={[40, 40]} />
-        <meshStandardMaterial
-          color="#292720"
-          roughness={0.28}
-          metalness={0.15}
-        />
+        <shadowMaterial transparent opacity={0.22} depthWrite={false} />
       </mesh>
-      <mesh position={[0, 3, -7]}>
-        <boxGeometry args={[24, 9, 0.3]} />
-        <meshStandardMaterial color="#403024" map={wood} roughness={0.7} />
-      </mesh>
-      {[-8, -4, 0, 4, 8].map((x) => (
-        <group key={x} position={[x, 1.3, -6.75]}>
-          <mesh>
-            <boxGeometry args={[3.65, 4.2, 0.1]} />
-            <meshStandardMaterial color="#13231c" roughness={0.87} />
-          </mesh>
-          {[-1.84, 1.84].map((a) => (
-            <mesh key={a} position={[a, 0, 0.06]}>
-              <boxGeometry args={[0.035, 4.25, 0.03]} />
-              <meshStandardMaterial
-                color={GOLD}
-                metalness={0.7}
-                roughness={0.35}
-              />
-            </mesh>
-          ))}
-          {[-2.12, 2.12].map((a) => (
-            <mesh key={a} position={[0, a, 0.06]}>
-              <boxGeometry args={[3.7, 0.035, 0.03]} />
-              <meshStandardMaterial
-                color={GOLD}
-                metalness={0.7}
-                roughness={0.35}
-              />
-            </mesh>
-          ))}
-        </group>
-      ))}
-      {[-5.8, 5.8].map((x) => (
-        <group key={x} position={[x, 1, -4.7]}>
-          <mesh>
-            <cylinderGeometry args={[0.25, 0.35, 6, 16]} />
-            <meshStandardMaterial map={wood} color="#765338" roughness={0.45} />
-          </mesh>
-          <mesh position={[0, 1.7, 0.22]}>
-            <boxGeometry args={[0.09, 0.8, 0.08]} />
-            <meshStandardMaterial
-              color="#f5d99b"
-              emissive="#e1aa55"
-              emissiveIntensity={2}
-            />
-          </mesh>
-          <pointLight
-            position={[0, 1.7, 0.65]}
-            color="#ffcf8a"
-            intensity={12}
-            distance={9}
-            decay={2}
-          />
-        </group>
-      ))}
-      {[-3.8, 3.8].map((x) => (
-        <group key={x} position={[x, 4.8, -2.4]}>
-          <mesh position={[0, 0.9, 0]}>
-            <cylinderGeometry args={[0.012, 0.012, 1.8, 8]} />
-            <meshStandardMaterial color={GOLD} />
-          </mesh>
-          <mesh>
-            <cylinderGeometry args={[0.18, 0.7, 0.28, 32, 1, true]} />
-            <meshStandardMaterial
-              color={GOLD}
-              metalness={0.65}
-              roughness={0.35}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-          <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -0.13, 0]}>
-            <circleGeometry args={[0.57, 32]} />
-            <meshStandardMaterial
-              emissive="#ffe1a1"
-              emissiveIntensity={3}
-              color="#eed8b0"
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-          <pointLight
-            position={[0, -0.4, 0]}
-            color="#ffd89a"
-            intensity={mode === "casino" ? 28 : 18}
-            distance={10}
-            decay={2}
-          />
-        </group>
-      ))}
+      {[-5.8, 5.8].map(x => <pointLight key={x} position={[x, 2.7, -4.05]} color="#ffcf8a" intensity={12} distance={9} decay={2} />)}
+      {[-3.8, 3.8].map(x => <pointLight key={x} position={[x, 4.4, -2.4]} color="#ffd89a" intensity={mode === "casino" ? 28 : 18} distance={10} decay={2} />)}
       <ambientLight intensity={0.25} color="#b1c0ac" />
       <hemisphereLight args={["#c9bc93", "#112c23", 0.35]} />
       <spotLight

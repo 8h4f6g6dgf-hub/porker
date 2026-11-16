@@ -23,6 +23,7 @@ for (const viewport of [
       .getByRole("button", { name: "演出をスキップ", exact: true })
       .click();
     await expect(page.locator("canvas")).toBeVisible();
+    await expect(page.locator("canvas")).toHaveAttribute("data-backdrop", "ready");
     await page.getByRole("button", { name: /01 \/ LEARN/ }).click();
     await advanceUntil(page, "reveal");
     await expect(
@@ -88,4 +89,15 @@ test("reduced-motionと再訪時の短縮・CASINOで同じ3D空間", async ({ p
   await page.getByRole("link", { name: /02 \/ PRACTICE/ }).click();
   await expect(page.locator("canvas")).toBeVisible();
   await expect(page.getByText("見学専用 · Coming Soon")).toBeVisible();
+});
+
+test("背景画像のロード失敗でも字幕とカード操作を継続できる", async ({ page }) => {
+  await page.route("**/assets/casino-floor.webp", route => route.abort());
+  await page.goto("/");
+  await page.getByRole("button", { name: "演出をスキップ", exact: true }).click();
+  await expect(page.locator("canvas")).toHaveAttribute("data-backdrop", "fallback");
+  await page.getByRole("button", { name: /01 \/ LEARN/ }).click();
+  await advanceUntil(page, "reveal");
+  await page.getByRole("button", { name: "手札1をめくる" }).click();
+  await expect(page.getByRole("button", { name: "手札1をめくる" })).toBeDisabled();
 });
