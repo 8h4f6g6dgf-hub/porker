@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { CasinoBackdrop } from "./CasinoBackdrop";
+import { CasinoFloor } from "./CasinoFloor";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import {
   materialTexture,
@@ -20,6 +21,10 @@ export interface CasinoSceneProps {
 }
 // Seated camera stays fixed; pitch offset is independently tunable.
 export const CAMERA_DOWNWARD_DEGREES = 3;
+// Distances measured horizontally from the seated look-at point (z=-0.15).
+export const SEATED_PULLBACK = 0.08;
+const comparison = import.meta.env.DEV ? new URLSearchParams(location.search).get("cameraStudy") : null;
+const pullback = comparison === "A" ? 0 : comparison === "C" ? 0.15 : SEATED_PULLBACK;
 const GOLD = "#b89858";
 const WHITE = "#acafa6";
 const phases = [
@@ -59,7 +64,7 @@ function CameraRail({
           3.2 - progress * 0.4,
           7.8 - progress * 2,
         )
-      : new THREE.Vector3(0, 2.8, 4.15);
+      : new THREE.Vector3(0, 2.8, 4.15 + 4.3 * pullback);
     camera.position.lerp(target, reducedMotion ? 1 : 1 - Math.exp(-dt * 2));
     look.current.lerp(
       new THREE.Vector3(0, entrance ? 1.1 : 0.35, -0.15),
@@ -75,10 +80,7 @@ function Room({ mode }: { mode: string }) {
     <group>
       <CasinoBackdrop />
       <fog attach="fog" args={["#21190f", 14, 30]} />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
-        <planeGeometry args={[40, 40]} />
-        <shadowMaterial transparent opacity={0.22} depthWrite={false} />
-      </mesh>
+      <CasinoFloor />
       {[-5.8, 5.8].map(x => <pointLight key={x} position={[x, 2.7, -4.05]} color="#ffcf8a" intensity={12} distance={9} decay={2} />)}
       {[-3.8, 3.8].map(x => <pointLight key={x} position={[x, 4.4, -2.4]} color="#ffd89a" intensity={mode === "casino" ? 28 : 18} distance={10} decay={2} />)}
       <ambientLight intensity={0.25} color="#b1c0ac" />
@@ -166,8 +168,8 @@ function Table() {
         />
       </mesh>
       {[-2.2, 2.2].map((x) => (
-        <mesh key={x} position={[x, -0.22, 0]} castShadow>
-          <boxGeometry args={[0.25, 1.3, 0.7]} />
+        <mesh key={x} position={[x, -0.285, 0]} castShadow>
+          <boxGeometry args={[0.38, 1.43, 1.0]} />
           <meshStandardMaterial map={wood} color="#573b22" roughness={0.4} />
         </mesh>
       ))}
