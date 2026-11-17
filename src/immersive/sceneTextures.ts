@@ -43,25 +43,30 @@ export function materialTexture(kind: "wood" | "felt") {
   });
 }
 export function cardTexture(rank: string, suit: string) {
-  return canvasTexture(256, 360, (ctx) => {
+  // Supersampled indices stay legible at the oblique seated viewing angle.
+  return canvasTexture(512, 720, (ctx) => {
+    ctx.scale(2, 2);
     ctx.fillStyle = "#f9f6e9";
     ctx.fillRect(0, 0, 256, 360);
     ctx.strokeStyle = "#d3cab0";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1;
     ctx.strokeRect(8, 8, 240, 344);
-    ctx.fillStyle = suit === "♥" || suit === "♦" ? "#a9362f" : "#152b25";
-    ctx.font = "bold 48px Georgia";
+    ctx.fillStyle = suit === "♥" || suit === "♦" ? "#a32227" : "#161616";
     ctx.textAlign = "center";
-    ctx.fillText(rank, 35, 56);
-    ctx.font = "36px Georgia";
-    ctx.fillText(suit, 35, 94);
+    ctx.textBaseline = "alphabetic";
+    // Draw both indices through the same function and state. A two-digit 10
+    // fits inside the border; the smaller suit cannot be confused with a rank.
+    const drawIndex = () => {
+      ctx.font = "700 46px Arial, sans-serif";
+      ctx.fillText(rank, 42, 57, 56);
+      ctx.font = "28px Arial, sans-serif";
+      ctx.fillText(suit, 42, 91, 40);
+    };
+    drawIndex();
     ctx.save();
     ctx.translate(256, 360);
     ctx.rotate(Math.PI);
-    ctx.font = "bold 48px Georgia";
-    ctx.fillText(rank, 35, 56);
-    ctx.font = "36px Georgia";
-    ctx.fillText(suit, 35, 94);
+    drawIndex();
     ctx.restore();
     ctx.font = "128px Georgia";
     ctx.fillText(suit, 128, 222);
