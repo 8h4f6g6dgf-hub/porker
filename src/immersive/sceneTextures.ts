@@ -43,34 +43,33 @@ export function materialTexture(kind: "wood" | "felt") {
   });
 }
 export function cardTexture(rank: string, suit: string) {
-  // Supersampled indices stay legible at the oblique seated viewing angle.
-  return canvasTexture(512, 720, (ctx) => {
-    ctx.scale(2, 2);
-    ctx.fillStyle = "#f9f6e9";
-    ctx.fillRect(0, 0, 256, 360);
-    ctx.strokeStyle = "#d3cab0";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(8, 8, 240, 344);
-    ctx.fillStyle = suit === "♥" || suit === "♦" ? "#a32227" : "#161616";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "alphabetic";
-    // Draw both indices through the same function and state. A two-digit 10
-    // fits inside the border; the smaller suit cannot be confused with a rank.
-    const drawIndex = () => {
-      ctx.font = "700 46px Arial, sans-serif";
-      ctx.fillText(rank, 42, 57, 56);
-      ctx.font = "28px Arial, sans-serif";
-      ctx.fillText(suit, 42, 91, 40);
-    };
-    drawIndex();
-    ctx.save();
-    ctx.translate(256, 360);
-    ctx.rotate(Math.PI);
-    drawIndex();
-    ctx.restore();
-    ctx.font = "128px Georgia";
-    ctx.fillText(suit, 128, 222);
+  const suitName = ({ "♥": "heart", "♦": "diamond", "♠": "spade", "♣": "club" } as Record<string, string>)[suit];
+  const rankName = ({ A: "1", J: "jack", Q: "queen", K: "king" } as Record<string, string>)[rank] ?? rank;
+  if (!suitName || !/^(1|[2-9]|10|jack|queen|king)$/.test(rankName))
+    throw new Error(`Unknown card: ${rank}${suit}`);
+  const texture = canvasTexture(512, 720, (ctx) => {
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, 512, 720);
   });
+  const image = new Image();
+  // Only mounted cards allocate GPU textures. HTTP caching reuses SVG downloads;
+  // the Card component disposes each texture when its card leaves the scene.
+  texture.userData.ready = new Promise<boolean>((resolve) => {
+    image.onload = () => {
+      // Updating CPU canvas is safe after disposal: only a mounted material
+      // uploads it. React StrictMode may dispose/reuse the same memoized texture.
+      texture.image.getContext("2d")!.drawImage(image, 0, 0, 512, 720);
+      texture.needsUpdate = true;
+      resolve(true);
+    };
+    image.onerror = () => {
+      texture.userData.loadError = true;
+      console.error(`Card face failed to load: ${rank}${suit}`);
+      resolve(false);
+    };
+  });
+  image.src = `${import.meta.env.BASE_URL}assets/cards/${suitName}_${rankName}.svg`;
+  return texture;
 }
 export function cardBackTexture() {
   return canvasTexture(256, 360, (ctx) => {
