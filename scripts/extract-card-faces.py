@@ -1,4 +1,4 @@
-"""Extract self-contained LGPL SVG faces; retain upstream artwork unchanged.
+"""Extract self-contained LGPL SVG faces; remove only the base outline.
 Run: python3 scripts/extract-card-faces.py
 """
 from pathlib import Path
@@ -30,7 +30,14 @@ for suit in ['heart', 'diamond', 'spade', 'club']:
         svg.append(ET.Comment(' SVG-cards © David Bellot, Huub de Beer and contributors. LGPL-2.1. See LICENSE, AUTHORS, README.md and source/svg-cards.svg. Extracted by Poker Academy. '))
         defs = ET.SubElement(svg, f'{{{ns}}}defs')
         for key in sorted(required - {name}):
-            defs.append(copy.deepcopy(ids[key]))
+            definition = copy.deepcopy(ids[key])
+            if key == 'base':
+                # Preserve white fill and rounded path; remove only its outline.
+                for element in definition.iter():
+                    style = element.get('style')
+                    if style:
+                        element.set('style', style.replace('stroke:#000000', 'stroke:none'))
+            defs.append(definition)
         svg.append(copy.deepcopy(ids[name]))
         ET.ElementTree(svg).write(out / f'{name}.svg', encoding='utf-8', xml_declaration=True)
 print('Extracted 52 self-contained SVG faces')

@@ -23,3 +23,7 @@ You may replace the individual SVG files with compatible card faces.
 Runtime loads only requested faces and rasterizes each at 512×720. Font-based
 indices use the upstream serif design with the browser's serif fallback where
 DejaVu Serif is unavailable. The 3D geometry and animation are unchanged.
+
+Poker Academy additionally removes only the base white card path’s black stroke
+(`stroke:#000000` → `stroke:none`). Its fill, rounded path, artwork and indices
+are unchanged. The upstream source remains unmodified.
