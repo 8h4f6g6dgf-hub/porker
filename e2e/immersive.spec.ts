@@ -95,13 +95,29 @@ test("reduced-motionと再訪時の短縮・CASINOで同じ3D空間", async ({ p
   await expect(page.getByText("見学専用 · Coming Soon")).toBeVisible();
 });
 
-test("背景画像のロード失敗でも字幕とカード操作を継続できる", async ({ page }) => {
+test("写真を要求せずVIP個室で字幕とカード操作を継続できる", async ({ page }) => {
+  const oldBackgroundRequests: string[] = [];
+  page.on("request", r => { if (r.url().includes("casino-floor.webp")) oldBackgroundRequests.push(r.url()); });
   await page.route("**/assets/casino-floor.webp", route => route.abort());
   await page.goto("/");
   await page.getByRole("button", { name: "演出をスキップ", exact: true }).click();
-  await expect(page.locator("canvas")).toHaveAttribute("data-backdrop", "fallback");
+  await expect(page.locator("canvas")).toHaveAttribute("data-environment", "vip-3d");
+  await expect(page.locator("canvas")).toHaveAttribute("data-room-textures", "ready");
+  expect(oldBackgroundRequests).toEqual([]);
   await page.getByRole("button", { name: /01 \/ LEARN/ }).click();
   await advanceUntil(page, "reveal");
   await page.getByRole("button", { name: "手札1をめくる" }).click();
   await expect(page.getByRole("button", { name: "手札1をめくる" })).toBeDisabled();
+});
+
+test("VIP木材が取得できなくても3D個室と学習操作を維持", async ({ page }) => {
+  await page.route("**/assets/vip-room/*.jpg", route => route.abort());
+  await page.goto("/");
+  await page.getByRole("button", {name:"演出をスキップ",exact:true}).click();
+  await expect(page.locator("canvas")).toHaveAttribute("data-room-textures","fallback");
+  await expect(page.locator("canvas")).toHaveAttribute("data-environment","vip-3d");
+  await page.getByRole("button", {name:/01 \/ LEARN/}).click();
+  await advanceUntil(page,"reveal");
+  await page.getByRole("button", {name:"手札1をめくる"}).click();
+  await expect(page.getByRole("button", {name:"手札1をめくる"})).toBeDisabled();
 });
