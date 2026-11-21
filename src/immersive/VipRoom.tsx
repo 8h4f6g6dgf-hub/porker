@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-// Room coordinates: floor -1, ceiling 3.5, rear wall -6.2, side walls ±5.8.
+// Room coordinates: floor -1, ceiling 4.0, rear wall -8.4, side walls ±6.4.
 // The visible architecture is merged by material, rather than one draw per moulding.
 function fabricTexture() {
   const c=document.createElement('canvas'); c.width=c.height=256;
@@ -54,53 +54,72 @@ export function VipRoom() {
     };
     const color=load('wood-color',true), normal=load('wood-normal'), rough=load('wood-roughness');
     const carpet=fabricTexture(); maps.push(carpet);
-    const wood=new THREE.MeshStandardMaterial({color:'#bccacb',map:color,normalMap:normal,normalScale:new THREE.Vector2(.35,.35),roughnessMap:rough,roughness:.8});
-    const trim=new THREE.MeshStandardMaterial({color:'#a8aaa1',map:color,roughness:.48});
+    const wood=new THREE.MeshStandardMaterial({color:'#a5b2b3',emissive:'#826247',emissiveMap:color,emissiveIntensity:.16,map:color,normalMap:normal,normalScale:new THREE.Vector2(.35,.35),roughnessMap:rough,roughness:.95});
+    const trim=new THREE.MeshStandardMaterial({color:'#8d9892',emissive:'#826247',emissiveMap:color,emissiveIntensity:.12,map:color,roughness:.72});
     const brass=new THREE.MeshStandardMaterial({color:'#93744a',metalness:.72,roughness:.37});
-    const fabric=new THREE.MeshStandardMaterial({color:'#607367',roughness:1,bumpMap:carpet,bumpScale:.009});
+    const fabric=new THREE.MeshStandardMaterial({color:'#345d42',emissive:'#1b3f2b',emissiveIntensity:.18,roughness:1,bumpMap:carpet,bumpScale:.0015});
     const plaster=new THREE.MeshStandardMaterial({color:'#807967',roughness:.98});
-    const floorMat=new THREE.MeshStandardMaterial({color:'#d1c2a4',map:carpet,bumpMap:carpet,bumpScale:.016,roughness:1});
+    const floorMat=new THREE.MeshStandardMaterial({color:'#a9ad9b',map:carpet,bumpMap:carpet,bumpScale:.016,roughness:1});
     const batches:THREE.BufferGeometry[][]=[[],[],[],[],[]];
     const add=(g:THREE.BufferGeometry,mat:number,p:[number,number,number],ry=0)=>{
+      // Vary the cut of the same timber, without mismatching its PBR maps.
+      if(mat<2){const uv=g.getAttribute('uv');const n=batches[mat].length;
+        for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*.82+(n*.173)%1,uv.getY(i)*.94+(n*.317)%1);
+      }
       g.rotateY(ry);g.translate(...p);batches[mat].push(g);
     };
     const box=(w:number,h:number,d:number,mat:number,p:[number,number,number],ry=0)=>add(new RoundedBoxGeometry(w,h,d,1,.018),mat,p,ry);
-    // Closed shell with thickness; side wall corners overlap the rear wall cleanly.
-    box(11.9,4.5,.24,0,[0,1.25,-6.32]);
-    for(const side of [-1,1]) box(.24,4.5,14.5,0,[side*5.92,1.25,.8]);
-    // Recessed rear panels, lower wainscot and physically projecting mouldings.
-    for(const x of [-4.65,-2.85,-.95,.95,2.85,4.65]) {
-      box(1.62,2.55,.06,3,[x,1.58,-6.15]);
-      add(frame(1.72,2.65,.055),1,[x,1.58,-6.10]);
-      box(1.58,.66,.07,0,[x,-.45,-6.13]);
-      add(frame(1.7,.78,.045),1,[x,-.45,-6.08]);
+    // Thick shell: a deeper salon, not a change to camera or poker table scale.
+    box(13.1,5,.24,0,[0,1.5,-8.52]);
+    for(const side of [-1,1])box(.24,5,16.7,0,[side*6.52,1.5,-.05]);
+    // A full-height upholstered center bay replaces the six pale window-like panels.
+    box(4.64,4.45,.12,1,[0,1.3,-8.30]);
+    add(frame(4.60,4.40,.09),0,[0,1.3,-8.20]);
+    for(const x of [-1.45,0,1.45]) {
+      box(1.37,4.12,.12,3,[x,1.3,-8.16]);
+      // Slim recessed seams read as tailoring, not glazing bars.
     }
-    // Side panels create real perspective and parallax, with a wider service door on right.
-    for(const side of [-1,1]) for(const z of [-4.95,-2.55,-.15,2.25,4.65]) {
+    for(const x of [-2.38,2.38])box(.018,4.48,.022,2,[x,1.3,-8.10]);
+    // Broader timber bays and narrow fluted piers establish an architectural rhythm.
+    for(const side of [-1,1]) {
+      for(const [x,w] of [[3.25,1.36],[5.20,1.84]]) {
+        box(w,4.3,.075,0,[side*x,1.3,-8.29]);
+        add(frame(w+.14,4.43,.065),1,[side*x,1.3,-8.18]);
+      }
+      for(const x of [2.55,4.15,6.25]) {
+        box(.18,4.68,.16,1,[side*x,1.33,-8.18]);
+        for(const dx of [-.05,0,.05])box(.012,4.5,.02,0,[side*x+dx,1.33,-8.08]);
+      }
+    }
+    // Side walls use staggered bay widths, not an office-like grid of chair rails.
+    for(const side of [-1,1]) for(const [z,w] of [[-6.5,3.2],[-3.15,2.9],[.1,3.2],[3.7,3.5],[6.8,2.4]]) {
       const ry=side===-1?Math.PI/2:-Math.PI/2;
-      box(2.12,3.55,.07,0,[side*5.76,1.02,z],ry);
-      add(frame(2.22,3.65,.065),1,[side*5.70,1.02,z],ry);
+      box(w-.16,4.35,.075,0,[side*6.36,1.25,z],ry);
+      add(frame(w-.04,4.48,.07),1,[side*6.28,1.25,z],ry);
+      if(z===-3.15)box(w-.42,3.99,.055,3,[side*6.20,1.25,z],ry);
     }
-    // Continuous skirting, chair rail and layered ceiling cornice.
-    for(const [y,h,d] of [[-.86,.22,.13],[.03,.11,.15],[3.05,.13,.17],[3.22,.18,.26]]) {
-      box(11.6,h,d,1,[0,y,-6.04]);
-      for(const side of [-1,1])box(d,h,14.1,1,[side*(5.8-d/2),y,.9]);
+    // Continuous skirting and a stepped cornice join wall, floor and tray ceiling.
+    for(const [y,h,d] of [[-.86,.22,.14],[-.69,.055,.18],[3.42,.14,.18],[3.67,.22,.32]]) {
+      box(12.8,h,d,1,[0,y,-8.20]);
+      for(const side of [-1,1])box(d,h,16.4,1,[side*(6.4-d/2),y,-.05]);
     }
-    box(11.6,.035,.035,2,[0,.12,-5.98]);
-    // Door: inset double panels, substantial casing, threshold and brass lever.
-    box(1.36,2.92,.12,1,[4.5,.49,-5.90]);
-    add(frame(1.49,3.04,.1),0,[4.5,.49,-5.79]);
-    for(const y of [-.27,1.13])add(frame(1.07,1.13,.025),0,[4.5,y,-5.73]);
-    box(.035,.23,.04,2,[4.97,.42,-5.68]);box(.19,.035,.055,2,[4.9,.45,-5.64]);
-    // Tray ceiling: perimeter soffit below recessed center, with hidden cove emitters.
-    box(11.8,.16,14.5,4,[0,3.58,.8]);
-    for(const side of [-1,1])box(.64,.23,14.2,4,[side*5.42,3.34,.8]);
-    box(10.2,.23,.65,4,[0,3.34,-5.87]);
+    // Recessed service door: two substantial panels with a small brass lever.
+    box(1.42,3.06,.10,1,[5.2,.56,-8.08]);
+    add(frame(1.55,3.20,.11),0,[5.2,.56,-7.98]);
+    for(const y of [-.22,1.27])add(frame(1.13,1.2,.028),0,[5.2,y,-7.83]);
+    box(.035,.23,.04,2,[5.7,.42,-7.77]);box(.19,.035,.055,2,[5.63,.45,-7.73]);
+    // Higher recessed ceiling; emitters are concealed behind the projecting lip.
+    box(13,.16,16.7,4,[0,4.08,-.05]);
+    for(const side of [-1,1])box(.72,.25,16.4,4,[side*6.02,3.81,-.05]);
+    box(11.4,.25,.7,4,[0,3.81,-8.05]);
+    box(.04,.64,.04,2,[1,3.75,1.5]);
+    for(const x of [-1.9,1.9])box(.18,.35,.18,2,[x,3.88,-6.3]);
     const geometries=batches.map(gs=>{const merged=mergeGeometries(gs);gs.forEach(g=>g.dispose());return merged!;});
     const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d')!;
     const gradient=ctx.createRadialGradient(64,64,8,64,64,64);gradient.addColorStop(0,'rgba(0,0,0,.65)');gradient.addColorStop(.65,'rgba(0,0,0,.4)');gradient.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gradient;ctx.fillRect(0,0,128,128);
     const contact=new THREE.CanvasTexture(c);maps.push(contact);
-    return {maps,materials:[wood,trim,brass,fabric,plaster],floorMat,geometries,contact};
+    const washTargets=[-1.9,1.9].map(x=>{const target=new THREE.Object3D();target.position.set(x,.5,-8.28);return target;});
+    return {maps,materials:[wood,trim,brass,fabric,plaster],floorMat,geometries,contact,washTargets};
   },[gl]);
   useEffect(()=>{
     scene.background=new THREE.Color('#302b23');gl.domElement.dataset.backdrop='ready';gl.domElement.dataset.environment='vip-3d';
@@ -108,30 +127,32 @@ export function VipRoom() {
   },[scene,gl,resources]);
   return <group>
     {resources.geometries.map((g,i)=><mesh key={i} geometry={g} material={resources.materials[i]} receiveShadow/>)}
-    <mesh rotation={[-Math.PI/2,0,0]} position={[0,-1,.8]} material={resources.floorMat} receiveShadow><planeGeometry args={[11.7,14.5]}/></mesh>
+    <mesh rotation={[-Math.PI/2,0,0]} position={[0,-1,-.05]} material={resources.floorMat} receiveShadow><planeGeometry args={[12.9,16.7]}/></mesh>
     <mesh rotation={[-Math.PI/2,0,0]} position={[0,-.997,0]}><planeGeometry args={[7.1,4.3]}/><meshBasicMaterial map={resources.contact} transparent depthWrite={false}/></mesh>
-    {[-3.7,3.7].map(x=><Sconce key={x} x={x}/>)}
-    {[-1,1].map(side=><mesh key={side} position={[side*5.08,3.26,.5]} rotation={[0,0,side*.35]}><boxGeometry args={[.025,.025,12.8]}/><meshBasicMaterial color='#edbd78'/></mesh>)}
-    <ambientLight intensity={.38} color='#d4c5aa'/>
-    <hemisphereLight args={['#e7d4b4','#29271d',.55]}/>
-    <pointLight position={[-4.7,2.4,-3.8]} color='#ffd6a1' intensity={35} distance={9}/>
-    <pointLight position={[4.7,2.4,-3.8]} color='#ffd6a1' intensity={35} distance={9}/>
+    {[-1,1].map(side=><Sconce key={side} side={side}/>)}
+    {[-1,1].map(side=><mesh key={side} position={[side*5.62,3.73,-.05]} rotation={[0,0,side*.35]}><boxGeometry args={[.025,.025,15.4]}/><meshBasicMaterial color='#ffcc88'/></mesh>)}
+    <ambientLight intensity={.26} color='#f2c793'/>
+    <hemisphereLight args={['#ead0a5','#25251c',.30]}/>
+    {resources.washTargets.map((target,i)=><group key={i}>
+      <primitive object={target}/>
+      <spotLight position={[(i===0?-1:1)*1.9,3.7,-6.3]} target={target} color='#ffbd80' intensity={85} angle={.72} penumbra={1} distance={7}/>
+    </group>)}
     <mesh position={[1,3.43,1.5]} rotation={[Math.PI/2,0,0]}><circleGeometry args={[.22,32]}/><meshBasicMaterial color="#ffe4b2" side={THREE.DoubleSide}/></mesh>
     <spotLight position={[1,3.4,1.5]} angle={.95} penumbra={1} intensity={38} distance={16} color='#ffe4b2' castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} shadow-bias={-.0003}/>
-    <pointLight position={[-3,2,2]} color='#b4c7b9' intensity={8} distance={7}/>
+    <pointLight position={[-3,2,2]} color='#ffd6a3' intensity={6} distance={7}/>
     <pointLight position={[0,1.6,-1]} color='#f2c794' intensity={5} distance={3}/>
   </group>;
 }
-function Sconce({x}:{x:number}) {
+function Sconce({side}:{side:number}) {
   const geometry=useMemo(()=>{
     const points=[new THREE.Vector2(.14,-.26),new THREE.Vector2(.22,-.24),new THREE.Vector2(.17,.22),new THREE.Vector2(.12,.26)];
     return new THREE.LatheGeometry(points,24);
   },[]);
   useEffect(()=>()=>geometry.dispose(),[geometry]);
-  return <group position={[x,.65,-5.68]}>
+  return <group position={[side*6.18,.35,-6]} rotation={[0,side===-1?Math.PI/2:-Math.PI/2,0]}>
     <mesh><boxGeometry args={[.16,.62,.07]}/><meshStandardMaterial color='#92744a' metalness={.7} roughness={.38}/></mesh>
     <mesh position={[0,-.16,.19]} rotation={[Math.PI/2,0,0]}><cylinderGeometry args={[.025,.025,.35,12]}/><meshStandardMaterial color='#8a6b40' metalness={.7} roughness={.35}/></mesh>
-    <mesh geometry={geometry} position={[0,.12,.34]}><meshStandardMaterial color='#ffe1ac' emissive='#ffce8a' emissiveIntensity={1.3} roughness={.88} side={THREE.DoubleSide}/></mesh>
-    <pointLight position={[0,.1,.36]} color='#ffd29a' intensity={18} distance={5} decay={2}/>
+    <mesh geometry={geometry} position={[0,.12,.34]}><meshStandardMaterial color='#e3ba79' emissive='#ffc576' emissiveIntensity={.8} roughness={.95} side={THREE.DoubleSide}/></mesh>
+    <pointLight position={[0,.1,.36]} color='#ffbd80' intensity={13} distance={5.5} decay={2}/>
   </group>;
 }
