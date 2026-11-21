@@ -58,7 +58,18 @@ export function cardTexture(rank: string, suit: string) {
     image.onload = () => {
       // Updating CPU canvas is safe after disposal: only a mounted material
       // uploads it. React StrictMode may dispose/reuse the same memoized texture.
-      texture.image.getContext("2d")!.drawImage(image, 0, 0, 512, 720);
+      const ctx = texture.image.getContext("2d")!;
+      // Non-destructive 2% safe margin on every edge; retain the artwork ratio.
+      const inset = 0.02, scale = 1 - 2 * inset;
+      ctx.drawImage(image, 512 * inset, 720 * inset, 512 * scale, 720 * scale);
+      if (rank === "A") {
+        // The central half of each ace contains its single pip (and club crest),
+        // with white space around it. Enlarge this region without touching indices.
+        const aceScale = scale * 1.2;
+        ctx.drawImage(image, 128, 180, 256, 360,
+          256 - 128 * aceScale, 360 - 180 * aceScale,
+          256 * aceScale, 360 * aceScale);
+      }
       texture.needsUpdate = true;
       resolve(true);
     };

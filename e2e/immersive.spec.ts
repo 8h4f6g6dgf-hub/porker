@@ -32,7 +32,11 @@ for (const viewport of [
     await page.getByRole("button", { name: "手札1をめくる" }).click();
     await page.getByRole("button", { name: "手札2をめくる" }).click();
     await page.getByRole("button", { name: "ハンドについて聞く →" }).click();
-    await advanceUntil(page, "river");
+    for (const phase of ["flop", "turn", "river"]) {
+      await advanceUntil(page, phase);
+      await page.waitForTimeout(1300);
+      await page.screenshot({ path: `test-results/cards-${phase}-${viewport.width}.png` });
+    }
     await page.getByRole("button", { name: "次へ進む →", exact: true }).click();
     await expect(page.locator(".caption-page")).toContainText("チップを賭けるベットを行います。");
     await page.locator(".caption-page").evaluate(async el => { await Promise.all(el.getAnimations().map(a => a.finished)); });

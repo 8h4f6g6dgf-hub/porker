@@ -10,6 +10,7 @@ import {
   cardBackTexture,
   feltMarkTexture,
 } from "./sceneTextures";
+import { CARD_LAYOUT, boardCardX } from "./cardLayout";
 export interface CasinoSceneProps {
   phase: string;
   revealed: boolean[];
@@ -486,6 +487,7 @@ function Card({
   const group = useRef<THREE.Group>(null),
     flip = useRef<THREE.Group>(null);
   const elapsed = useRef(0);
+  const destinationX = useRef(position[0]);
   const initialFace = useRef(face);
   const textures = useMemo(
     () => [cardTexture(rank, suit), cardBackTexture()],
@@ -498,10 +500,13 @@ function Card({
       ? 1
       : THREE.MathUtils.clamp((elapsed.current - delay) / 0.75, 0, 1);
     const eased = 1 - Math.pow(1 - p, 3);
+    // Keep existing cards centered smoothly when turn/river extends the row.
+    destinationX.current = reducedMotion ? position[0]
+      : THREE.MathUtils.damp(destinationX.current, position[0], 10, dt);
     if (group.current) {
       group.current.visible = p > 0;
       group.current.position.set(
-        THREE.MathUtils.lerp(-0.15, position[0], eased),
+        THREE.MathUtils.lerp(-0.15, destinationX.current, eased),
         position[1] +
           Math.sin(p * Math.PI) * 0.018 +
           (flip.current ? Math.sin(flip.current.rotation.y) * 0.27 : 0),
@@ -573,7 +578,7 @@ function Cards(props: CasinoSceneProps) {
           <Card
             key={`hole-${i}`}
             index={i}
-            position={[i === 0 ? -0.31 : 0.31, 0.790, 1.12]}
+            position={[(i === 0 ? -1 : 1) * CARD_LAYOUT.handHalfPitch, CARD_LAYOUT.surfaceY, CARD_LAYOUT.handZ]}
             rank={i === 0 ? "A" : "K"}
             suit="♥"
             face={props.revealed[i] ?? false}
@@ -586,7 +591,7 @@ function Cards(props: CasinoSceneProps) {
         <Card
           key={`board-${i}`}
           index={i + 2}
-          position={[(i - 2) * 0.55, 0.790, -0.02]}
+          position={[boardCardX(i, props.communityCount), CARD_LAYOUT.surfaceY, CARD_LAYOUT.boardZ]}
           rank={ranks[i]}
           suit={suits[i]}
           face
