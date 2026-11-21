@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { VipRoom } from "./VipRoom";
+import { PokerFurniture } from "./PokerFurniture";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import {
   materialTexture,
@@ -109,7 +110,6 @@ function Table() {
       </mesh>
       {[
         [3.34, 2.07, 0.58],
-        [3.13, 1.89, 0.775],
       ].map(([x, z, y], i) => (
         <mesh
           key={i}
@@ -579,6 +579,7 @@ function SceneContents(props: CasinoSceneProps) {
       <CameraRail phase={props.phase} reducedMotion={props.reducedMotion} />
       <VipRoom />
       <Table />
+      <PokerFurniture />
       <Dealer phase={props.phase} reducedMotion={props.reducedMotion} />
       <Cards {...props} />
       <Chips />
