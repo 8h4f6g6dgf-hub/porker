@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { tableSupportGeometry } from "./tableSupportGeometry";
 import { apronLightMap } from "./vipSurfaceTextures";
 import { VipRoom } from "./VipRoom";
 import { tabletopGeometry } from "./pokerFurnitureGeometry";
@@ -79,6 +80,8 @@ function CameraRail({
   return null;
 }
 function Table() {
+  const support=useMemo(()=>tableSupportGeometry(),[]);
+  useEffect(()=>()=>support.dispose(),[support]);
   const apronBounce=useMemo(()=>apronLightMap(),[]);
   useEffect(()=>()=>apronBounce.dispose(),[apronBounce]);
   const surfaces=useMemo(()=>{
@@ -123,12 +126,9 @@ function Table() {
           depthWrite={false}
         />
       </mesh>
-      {[-1.9, 1.9].map((x) => (
-        <mesh key={x} position={[x, -0.225, 0]} castShadow>
-          <boxGeometry args={[0.42, 1.55, 1.25]} />
-          <meshStandardMaterial map={wood} color="#573b22" roughness={0.4} />
-        </mesh>
-      ))}
+      <mesh geometry={support} castShadow receiveShadow>
+        <meshStandardMaterial map={wood} color="#493426" roughness={.62} lightMap={apronBounce} lightMapIntensity={70}/>
+      </mesh>
       <mesh position={[0, 0.797, 0.95]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.66, 0.667, 64, 1, 0, Math.PI * 2]} />
         <meshBasicMaterial color={GOLD} transparent opacity={0.12} />
