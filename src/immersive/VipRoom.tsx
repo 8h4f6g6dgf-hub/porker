@@ -54,14 +54,14 @@ export function VipRoom() {
       t.colorSpace=color?THREE.SRGBColorSpace:THREE.NoColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;maps.push(t);return t;
     };
     const color=load('wood-color',true), normal=load('wood-normal'), rough=load('wood-roughness');
-    const weave=fabricTexture(),carpet=carpetTexture(),floorLight=roomLightMap(true),wallLight=roomLightMap(false);
+    const weave=fabricTexture(),carpet=carpetTexture(gl.capabilities.getMaxAnisotropy()),floorLight=roomLightMap(true),wallLight=roomLightMap(false);
     maps.push(weave,carpet,floorLight,wallLight);
     const wood=new THREE.MeshStandardMaterial({color:'#b1a293',emissive:'#826247',emissiveMap:color,emissiveIntensity:.04,lightMap:wallLight,lightMapIntensity:1.8,map:color,normalMap:normal,normalScale:new THREE.Vector2(.16,.16),roughnessMap:rough,roughness:.95});
     const trim=new THREE.MeshStandardMaterial({color:'#928174',emissive:'#826247',emissiveMap:color,emissiveIntensity:.035,map:color,roughnessMap:rough,roughness:.90,lightMap:wallLight,lightMapIntensity:1.8});
     const brass=new THREE.MeshStandardMaterial({color:'#88734f',metalness:.65,roughness:.49});
     const fabric=new THREE.MeshStandardMaterial({color:'#345d42',emissive:'#1b3f2b',emissiveIntensity:.18,roughness:1,bumpMap:weave,bumpScale:.0015,lightMap:wallLight,lightMapIntensity:.6});
     const plaster=new THREE.MeshStandardMaterial({color:'#807967',roughness:.98});
-    const floorMat=new THREE.MeshStandardMaterial({color:'#99616e',map:carpet,bumpMap:carpet,bumpScale:.003,roughness:1,lightMap:floorLight,lightMapIntensity:1.6});
+    const floorMat=new THREE.MeshStandardMaterial({color:'#ffffff',map:carpet,bumpMap:carpet,bumpScale:.003,roughness:1,lightMap:floorLight,lightMapIntensity:1.6});
     const batches:THREE.BufferGeometry[][]=[[],[],[],[],[]];
     const add=(g:THREE.BufferGeometry,mat:number,p:[number,number,number],ry=0)=>{
       // World-scale timber cuts: vertical panels, horizontal rails. All PBR maps share UV0.

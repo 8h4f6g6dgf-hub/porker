@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { apronLightMap } from "./vipSurfaceTextures";
 import { VipRoom } from "./VipRoom";
 import { tabletopGeometry } from "./pokerFurnitureGeometry";
 import { PokerFurniture } from "./PokerFurniture";
@@ -78,7 +79,17 @@ function CameraRail({
   return null;
 }
 function Table() {
-  const surfaces=useMemo(()=>[tabletopGeometry(1.79,.14),tabletopGeometry(1.70,.07),tabletopGeometry(1.59,.035)],[]);
+  const apronBounce=useMemo(()=>apronLightMap(),[]);
+  useEffect(()=>()=>apronBounce.dispose(),[apronBounce]);
+  const surfaces=useMemo(()=>{
+    const geometries=[tabletopGeometry(1.79,.14),tabletopGeometry(1.70,.07),tabletopGeometry(1.59,.035)];
+    for(const g of geometries.slice(0,2)){
+      const p=g.getAttribute('position'),uv:number[]=[];
+      for(let i=0;i<p.count;i++)uv.push((p.getX(i)+3.7)/7.4,(p.getZ(i)+1.8)/3.6);
+      g.setAttribute('uv1',new THREE.Float32BufferAttribute(uv,2));
+    }
+    return geometries;
+  },[]);
   useEffect(()=>()=>surfaces.forEach(g=>g.dispose()),[surfaces]);
   const [wood, felt, mark] = useMemo(
     () => [materialTexture("wood"), materialTexture("felt"), feltMarkTexture()],
@@ -95,10 +106,10 @@ function Table() {
   return (
     <group>
       <mesh geometry={surfaces[0]} position={[0,.69,0]} castShadow receiveShadow>
-        <meshStandardMaterial map={wood} color="#493426" roughness={.62}/>
+        <meshStandardMaterial map={wood} color="#493426" roughness={.62} lightMap={apronBounce} lightMapIntensity={12}/>
       </mesh>
       <mesh geometry={surfaces[1]} position={[0,.755,0]} castShadow>
-        <meshStandardMaterial color="#191d16" roughness={.75}/>
+        <meshStandardMaterial color="#191d16" roughness={.75} lightMap={apronBounce} lightMapIntensity={2.2}/>
       </mesh>
       <mesh geometry={surfaces[2]} position={[0,.7875,0]} receiveShadow>
         <meshStandardMaterial map={felt} color="#abc0a9" roughness={.94}/>
