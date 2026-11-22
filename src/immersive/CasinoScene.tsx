@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { VipRoom } from "./VipRoom";
+import { tabletopGeometry } from "./pokerFurnitureGeometry";
 import { PokerFurniture } from "./PokerFurniture";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import {
@@ -77,6 +78,8 @@ function CameraRail({
   return null;
 }
 function Table() {
+  const surfaces=useMemo(()=>[tabletopGeometry(1.79,.14),tabletopGeometry(1.70,.07),tabletopGeometry(1.59,.035)],[]);
+  useEffect(()=>()=>surfaces.forEach(g=>g.dispose()),[surfaces]);
   const [wood, felt, mark] = useMemo(
     () => [materialTexture("wood"), materialTexture("felt"), feltMarkTexture()],
     [],
@@ -91,36 +94,15 @@ function Table() {
   );
   return (
     <group>
-      <mesh
-        position={[0, 0.53, 0]}
-        scale={[3.35, 1, 2.08]}
-        castShadow
-        receiveShadow
-      >
-        <cylinderGeometry args={[1, 1, 0.24, 96]} />
-        <meshStandardMaterial map={wood} color="#9b7752" roughness={0.35} />
+      <mesh geometry={surfaces[0]} position={[0,.69,0]} castShadow receiveShadow>
+        <meshStandardMaterial map={wood} color="#493426" roughness={.62}/>
       </mesh>
-      <mesh position={[0, 0.69, 0]} scale={[3.27, 1, 2.01]} castShadow>
-        <cylinderGeometry args={[1, 1, 0.13, 96]} />
-        <meshStandardMaterial color="#191d16" roughness={0.6} />
+      <mesh geometry={surfaces[1]} position={[0,.755,0]} castShadow>
+        <meshStandardMaterial color="#191d16" roughness={.75}/>
       </mesh>
-      <mesh position={[0, 0.77, 0]} scale={[3.06, 1, 1.82]} receiveShadow>
-        <cylinderGeometry args={[1, 1, 0.035, 96]} />
-        <meshStandardMaterial map={felt} color="#abc0a9" roughness={0.94} />
+      <mesh geometry={surfaces[2]} position={[0,.7875,0]} receiveShadow>
+        <meshStandardMaterial map={felt} color="#abc0a9" roughness={.94}/>
       </mesh>
-      {[
-        [3.34, 2.07, 0.58],
-      ].map(([x, z, y], i) => (
-        <mesh
-          key={i}
-          position={[0, y, 0]}
-          rotation={[Math.PI / 2, 0, 0]}
-          scale={[x, z, 1]}
-        >
-          <torusGeometry args={[1, 0.006, 6, 128]} />
-          <meshStandardMaterial color={GOLD} roughness={0.3} metalness={0.7} />
-        </mesh>
-      ))}
       <mesh position={[0, 0.795, -0.66]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[2.3, 0.58]} />
         <meshBasicMaterial
@@ -130,9 +112,9 @@ function Table() {
           depthWrite={false}
         />
       </mesh>
-      {[-2.2, 2.2].map((x) => (
-        <mesh key={x} position={[x, -0.285, 0]} castShadow>
-          <boxGeometry args={[0.38, 1.43, 1.0]} />
+      {[-1.9, 1.9].map((x) => (
+        <mesh key={x} position={[x, -0.225, 0]} castShadow>
+          <boxGeometry args={[0.42, 1.55, 1.25]} />
           <meshStandardMaterial map={wood} color="#573b22" roughness={0.4} />
         </mesh>
       ))}

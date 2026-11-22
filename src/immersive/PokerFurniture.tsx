@@ -24,6 +24,7 @@ export function PokerFurniture(){
   const r=useMemo(()=>{
     const grain=leatherGrain();
     return {...chairGeometries(),rail:railGeometry(),stitches:railStitches(),grain,
+      railLeather:new THREE.MeshStandardMaterial({color:'#171412',roughness:.86,bumpMap:grain,bumpScale:.002}),
       leather:new THREE.MeshStandardMaterial({color:'#49342a',roughness:.76,bumpMap:grain,bumpScale:.004}),
       metal:new THREE.MeshStandardMaterial({color:'#302b25',metalness:.55,roughness:.48}),
       thread:new THREE.MeshStandardMaterial({color:'#79604a',roughness:.95})};
@@ -34,10 +35,10 @@ export function PokerFurniture(){
       ref.current.instanceMatrix.needsUpdate=true;ref.current.computeBoundingSphere();
     }
   },[]);
-  useEffect(()=>()=>{r.grain.dispose();r.leather.dispose();r.metal.dispose();r.thread.dispose();r.shell.dispose();r.legs.dispose();r.seams.dispose();r.rail.dispose();r.stitches.dispose();},[r]);
+  useEffect(()=>()=>{r.railLeather.dispose();r.grain.dispose();r.leather.dispose();r.metal.dispose();r.thread.dispose();r.shell.dispose();r.legs.dispose();r.seams.dispose();r.rail.dispose();r.stitches.dispose();},[r]);
   return <group>
-    <mesh geometry={r.rail} material={r.leather} castShadow receiveShadow/>
-    <lineSegments geometry={r.stitches}><lineBasicMaterial color='#80654e' transparent opacity={.7}/></lineSegments>
+    <mesh geometry={r.rail} material={r.railLeather} castShadow receiveShadow/>
+    <lineSegments geometry={r.stitches}><lineBasicMaterial color='#494039' transparent opacity={.7}/></lineSegments>
     <instancedMesh ref={shells} args={[r.shell,r.leather,CHAIR_POSITIONS.length]} castShadow receiveShadow/>
     <instancedMesh ref={legs} args={[r.legs,r.metal,CHAIR_POSITIONS.length]} castShadow receiveShadow/>
     <instancedMesh ref={seams} args={[r.seams,r.thread,CHAIR_POSITIONS.length]} receiveShadow/>

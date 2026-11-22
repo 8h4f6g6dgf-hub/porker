@@ -2,19 +2,41 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export const CHAIR_POSITIONS: readonly [number, number][] = [
-  [-3.95,-.35],[3.95,-.35],[-3.25,2],[3.25,2],[-2.35,-2.7],[2.35,-2.7],
+  [-4.25,.35],[4.25,.35],[-2.3,2.55],[2.3,2.55],[0,2.75],
 ];
 export function chairMatrix(x:number,z:number) {
-  return new THREE.Matrix4().compose(new THREE.Vector3(x,.05,z),new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.atan2(x,z)),new THREE.Vector3(1,1,1));
+  return new THREE.Matrix4().compose(new THREE.Vector3(x,.05,z),new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.abs(x)>4 ? Math.sign(x)*Math.PI/2 : 0),new THREE.Vector3(1,1,1));
 }
-// Padded cross section stays within the existing 3.35 × 2.08 half-extents
-// and below the previous maximum table surface height (0.797).
+// Shared racetrack outline: 7.4 × 3.6, with genuine straight long sides.
+export const TABLE = { halfStraight:1.9, radius:1.8, railWidth:.22 };
+export function outline(t:number,r=TABLE.radius):[number,number] {
+  const length=4*TABLE.halfStraight+2*Math.PI*r;
+  let d=((t%(2*Math.PI)+2*Math.PI)%(2*Math.PI))/(2*Math.PI)*length;
+  if(d<2*TABLE.halfStraight)return [-TABLE.halfStraight+d,r];
+  d-=2*TABLE.halfStraight;
+  if(d<Math.PI*r){const a=Math.PI/2-d/r;return [TABLE.halfStraight+r*Math.cos(a),r*Math.sin(a)];}
+  d-=Math.PI*r;
+  if(d<2*TABLE.halfStraight)return [TABLE.halfStraight-d,-r];
+  d-=2*TABLE.halfStraight;const a=-Math.PI/2-d/r;
+  return [-TABLE.halfStraight+r*Math.cos(a),r*Math.sin(a)];
+}
+export function tabletopGeometry(radius:number,thickness:number){
+  const shape=new THREE.Shape();
+  for(let i=0;i<=192;i++){const [x,z]=outline(i/192*Math.PI*2,radius);if(i===0)shape.moveTo(x,z);else shape.lineTo(x,z);}
+  shape.closePath();
+  const g=new THREE.ExtrudeGeometry(shape,{depth:thickness,bevelEnabled:false,steps:1});
+  g.rotateX(Math.PI/2);
+  const position=g.getAttribute('position'),uv=g.getAttribute('uv');
+  for(let i=0;i<position.count;i++)uv.setXY(i,position.getX(i)/(2*(TABLE.halfStraight+radius))+.5,position.getZ(i)/(2*radius)+.5);
+  return g;
+}
 export function railGeometry() {
   const vertices:number[]=[],uvs:number[]=[],indices:number[]=[];
   const around=160,section=16;
   for(let i=0;i<=around;i++)for(let j=0;j<=section;j++){
     const t=i/around*Math.PI*2,p=j/section*Math.PI*2;
-    vertices.push((3.19+.15*Math.cos(p))*Math.cos(t),.72+.075*Math.sin(p),(1.92+.15*Math.cos(p))*Math.sin(t));
+    const [x,z]=outline(t,1.69+.11*Math.cos(p));
+    vertices.push(x,.747+.048*Math.sin(p),z);
     uvs.push(i/around*14,j/section);
   }
   for(let i=0;i<around;i++)for(let j=0;j<section;j++){
@@ -26,7 +48,7 @@ export function railStitches() {
   const points:number[]=[];
   for(let i=0;i<360;i++)for(const end of [0,.48]){
     const t=(i+end)/360*Math.PI*2;
-    points.push(3.157*Math.cos(t),.794,1.887*Math.sin(t));
+    const [x,z]=outline(t,1.65);points.push(x,.793,z);
   }
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(points,3));return g;
 }
