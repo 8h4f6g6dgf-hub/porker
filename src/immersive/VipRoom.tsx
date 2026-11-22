@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { carpetTexture, roomLightMap } from './vipSurfaceTextures';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // Room coordinates: floor -1, ceiling 4.0, rear wall -8.4, side walls ±6.4.
@@ -24,7 +25,7 @@ function fabricTexture() {
 }
 function frame(w:number,h:number,depth:number) {
   const s=new THREE.Shape();s.moveTo(-w/2,-h/2);s.lineTo(w/2,-h/2);s.lineTo(w/2,h/2);s.lineTo(-w/2,h/2);s.closePath();
-  const hole=new THREE.Path();const rim=.055;
+  const hole=new THREE.Path();const rim=.075;
   hole.moveTo(-w/2+rim,-h/2+rim);hole.lineTo(-w/2+rim,h/2-rim);hole.lineTo(w/2-rim,h/2-rim);hole.lineTo(w/2-rim,-h/2+rim);hole.closePath();s.holes.push(hole);
   return new THREE.ExtrudeGeometry(s,{depth,bevelEnabled:true,bevelThickness:.012,bevelSize:.014,bevelSegments:2,steps:1});
 }
@@ -53,20 +54,34 @@ export function VipRoom() {
       t.colorSpace=color?THREE.SRGBColorSpace:THREE.NoColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;maps.push(t);return t;
     };
     const color=load('wood-color',true), normal=load('wood-normal'), rough=load('wood-roughness');
-    const carpet=fabricTexture(); maps.push(carpet);
-    const wood=new THREE.MeshStandardMaterial({color:'#a5b2b3',emissive:'#826247',emissiveMap:color,emissiveIntensity:.16,map:color,normalMap:normal,normalScale:new THREE.Vector2(.35,.35),roughnessMap:rough,roughness:.95});
-    const trim=new THREE.MeshStandardMaterial({color:'#8d9892',emissive:'#826247',emissiveMap:color,emissiveIntensity:.12,map:color,roughness:.72});
-    const brass=new THREE.MeshStandardMaterial({color:'#93744a',metalness:.72,roughness:.37});
-    const fabric=new THREE.MeshStandardMaterial({color:'#345d42',emissive:'#1b3f2b',emissiveIntensity:.18,roughness:1,bumpMap:carpet,bumpScale:.0015});
+    const weave=fabricTexture(),carpet=carpetTexture(),floorLight=roomLightMap(true),wallLight=roomLightMap(false);
+    maps.push(weave,carpet,floorLight,wallLight);
+    const wood=new THREE.MeshStandardMaterial({color:'#b1a293',emissive:'#826247',emissiveMap:color,emissiveIntensity:.04,lightMap:wallLight,lightMapIntensity:1.8,map:color,normalMap:normal,normalScale:new THREE.Vector2(.16,.16),roughnessMap:rough,roughness:.95});
+    const trim=new THREE.MeshStandardMaterial({color:'#928174',emissive:'#826247',emissiveMap:color,emissiveIntensity:.035,map:color,roughnessMap:rough,roughness:.90,lightMap:wallLight,lightMapIntensity:1.8});
+    const brass=new THREE.MeshStandardMaterial({color:'#88734f',metalness:.65,roughness:.49});
+    const fabric=new THREE.MeshStandardMaterial({color:'#345d42',emissive:'#1b3f2b',emissiveIntensity:.18,roughness:1,bumpMap:weave,bumpScale:.0015,lightMap:wallLight,lightMapIntensity:.6});
     const plaster=new THREE.MeshStandardMaterial({color:'#807967',roughness:.98});
-    const floorMat=new THREE.MeshStandardMaterial({color:'#a9ad9b',map:carpet,bumpMap:carpet,bumpScale:.016,roughness:1});
+    const floorMat=new THREE.MeshStandardMaterial({color:'#99616e',map:carpet,bumpMap:carpet,bumpScale:.003,roughness:1,lightMap:floorLight,lightMapIntensity:1.6});
     const batches:THREE.BufferGeometry[][]=[[],[],[],[],[]];
     const add=(g:THREE.BufferGeometry,mat:number,p:[number,number,number],ry=0)=>{
-      // Vary the cut of the same timber, without mismatching its PBR maps.
-      if(mat<2){const uv=g.getAttribute('uv');const n=batches[mat].length;
-        for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*.82+(n*.173)%1,uv.getY(i)*.94+(n*.317)%1);
+      // World-scale timber cuts: vertical panels, horizontal rails. All PBR maps share UV0.
+      if(mat<2){
+        g.computeBoundingBox();const size=g.boundingBox!.getSize(new THREE.Vector3());
+        const uv=g.getAttribute('uv'),position=g.getAttribute('position'),n=batches[mat].length;
+        const horizontal=Math.max(size.x,size.z)>size.y*3;
+        for(let i=0;i<uv.count;i++){
+          const along=size.z>size.x?position.getZ(i):position.getX(i),up=position.getY(i);
+          uv.setXY(i,(horizontal?up:along)/2.4+(n*.173)%1,(horizontal?along:up)/3.6+(n*.317)%1);
+        }
       }
-      g.rotateY(ry);g.translate(...p);batches[mat].push(g);
+      g.rotateY(ry);g.translate(...p);
+      const positions=g.getAttribute('position'),lightUV:number[]=[];
+      const panel=p[0]<-6?0:p[0]>6?2:1;
+      for(let i=0;i<positions.count;i++){
+        const horizontal=panel===1?(positions.getX(i)+6.4)/12.8:(positions.getZ(i)+8.4)/16.7;
+        lightUV.push((panel*256+.5+THREE.MathUtils.clamp(horizontal,0,1)*255)/768,THREE.MathUtils.clamp((positions.getY(i)+1)/5,0,1));
+      }
+      g.setAttribute('uv1',new THREE.Float32BufferAttribute(lightUV,2));batches[mat].push(g);
     };
     const box=(w:number,h:number,d:number,mat:number,p:[number,number,number],ry=0)=>add(new RoundedBoxGeometry(w,h,d,1,.018),mat,p,ry);
     // Thick shell: a deeper salon, not a change to camera or poker table scale.
@@ -85,6 +100,7 @@ export function VipRoom() {
       for(const [x,w] of [[3.25,1.36],[5.20,1.84]]) {
         box(w,4.3,.075,0,[side*x,1.3,-8.29]);
         add(frame(w+.14,4.43,.065),1,[side*x,1.3,-8.18]);
+        add(frame(w-.11,4.16,.022),1,[side*x,1.3,-8.205]);
       }
       for(const x of [2.55,4.15,6.25]) {
         box(.18,4.68,.16,1,[side*x,1.33,-8.18]);
@@ -96,10 +112,11 @@ export function VipRoom() {
       const ry=side===-1?Math.PI/2:-Math.PI/2;
       box(w-.16,4.35,.075,0,[side*6.36,1.25,z],ry);
       add(frame(w-.04,4.48,.07),1,[side*6.28,1.25,z],ry);
+      add(frame(w-.29,4.20,.022),1,[side*6.30,1.25,z],ry);
       if(z===-3.15)box(w-.42,3.99,.055,3,[side*6.20,1.25,z],ry);
     }
     // Continuous skirting and a stepped cornice join wall, floor and tray ceiling.
-    for(const [y,h,d] of [[-.86,.22,.14],[-.69,.055,.18],[3.42,.14,.18],[3.67,.22,.32]]) {
+    for(const [y,h,d] of [[-.875,.25,.17],[-.69,.055,.18],[3.42,.14,.18],[3.67,.22,.32]]) {
       box(12.8,h,d,1,[0,y,-8.20]);
       for(const side of [-1,1])box(d,h,16.4,1,[side*(6.4-d/2),y,-.05]);
     }
@@ -116,18 +133,19 @@ export function VipRoom() {
     for(const x of [-1.9,1.9])box(.18,.35,.18,2,[x,3.88,-6.3]);
     const geometries=batches.map(gs=>{const merged=mergeGeometries(gs);gs.forEach(g=>g.dispose());return merged!;});
     const c=document.createElement('canvas');c.width=c.height=128;const ctx=c.getContext('2d')!;
-    const gradient=ctx.createRadialGradient(64,64,8,64,64,64);gradient.addColorStop(0,'rgba(0,0,0,.65)');gradient.addColorStop(.65,'rgba(0,0,0,.4)');gradient.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gradient;ctx.fillRect(0,0,128,128);
+    const gradient=ctx.createRadialGradient(64,64,8,64,64,64);gradient.addColorStop(0,'rgba(0,0,0,.48)');gradient.addColorStop(.65,'rgba(0,0,0,.25)');gradient.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gradient;ctx.fillRect(0,0,128,128);
     const contact=new THREE.CanvasTexture(c);maps.push(contact);
     const washTargets=[-1.9,1.9].map(x=>{const target=new THREE.Object3D();target.position.set(x,.5,-8.28);return target;});
-    return {maps,materials:[wood,trim,brass,fabric,plaster],floorMat,geometries,contact,washTargets};
+    const floorGeometry=new THREE.PlaneGeometry(12.9,16.7);floorGeometry.setAttribute('uv1',floorGeometry.getAttribute('uv').clone());
+    return {floorGeometry,maps,materials:[wood,trim,brass,fabric,plaster],floorMat,geometries,contact,washTargets};
   },[gl]);
   useEffect(()=>{
     scene.background=new THREE.Color('#302b23');gl.domElement.dataset.backdrop='ready';gl.domElement.dataset.environment='vip-3d';
-    return()=>{scene.background=null;resources.maps.forEach(t=>t.dispose());resources.materials.forEach(m=>m.dispose());resources.floorMat.dispose();resources.geometries.forEach(g=>g.dispose());};
+    return()=>{scene.background=null;resources.maps.forEach(t=>t.dispose());resources.materials.forEach(m=>m.dispose());resources.floorMat.dispose();resources.floorGeometry.dispose();resources.geometries.forEach(g=>g.dispose());};
   },[scene,gl,resources]);
   return <group>
     {resources.geometries.map((g,i)=><mesh key={i} geometry={g} material={resources.materials[i]} receiveShadow/>)}
-    <mesh rotation={[-Math.PI/2,0,0]} position={[0,-1,-.05]} material={resources.floorMat} receiveShadow><planeGeometry args={[12.9,16.7]}/></mesh>
+    <mesh rotation={[-Math.PI/2,0,0]} position={[0,-1,-.05]} material={resources.floorMat} geometry={resources.floorGeometry} receiveShadow/>
     <mesh rotation={[-Math.PI/2,0,0]} position={[0,-.997,0]}><planeGeometry args={[7.1,4.3]}/><meshBasicMaterial map={resources.contact} transparent depthWrite={false}/></mesh>
     {[-1,1].map(side=><Sconce key={side} side={side}/>)}
     {[-1,1].map(side=><mesh key={side} position={[side*5.62,3.73,-.05]} rotation={[0,0,side*.35]}><boxGeometry args={[.025,.025,15.4]}/><meshBasicMaterial color='#ffcc88'/></mesh>)}
@@ -152,7 +170,7 @@ function Sconce({side}:{side:number}) {
   return <group position={[side*6.18,.35,-6]} rotation={[0,side===-1?Math.PI/2:-Math.PI/2,0]}>
     <mesh><boxGeometry args={[.16,.62,.07]}/><meshStandardMaterial color='#92744a' metalness={.7} roughness={.38}/></mesh>
     <mesh position={[0,-.16,.19]} rotation={[Math.PI/2,0,0]}><cylinderGeometry args={[.025,.025,.35,12]}/><meshStandardMaterial color='#8a6b40' metalness={.7} roughness={.35}/></mesh>
-    <mesh geometry={geometry} position={[0,.12,.34]}><meshStandardMaterial color='#e3ba79' emissive='#ffc576' emissiveIntensity={.8} roughness={.95} side={THREE.DoubleSide}/></mesh>
+    <mesh geometry={geometry} position={[0,.12,.34]}><meshStandardMaterial color='#e3ba79' emissive='#ffc576' emissiveIntensity={.65} roughness={.95} side={THREE.DoubleSide}/></mesh>
     <pointLight position={[0,.1,.36]} color='#ffbd80' intensity={13} distance={5.5} decay={2}/>
   </group>;
 }
