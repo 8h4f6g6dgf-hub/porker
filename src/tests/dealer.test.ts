@@ -23,17 +23,19 @@ describe('rigged dealer',()=>{
   });expect(skins).toBe(2);
  });
  it('keeps hand mesh above felt throughout idle, dealing and presenting',()=>{
+  let minimumY=Infinity,finite=true;const v=new THREE.Vector3();
   for(const phase of ['choose','deal','flop','turn','river'])for(let t=0;t<3;t+=.05){
    rig.pose(phase,t,false);rig.root.updateMatrixWorld(true);
    rig.root.traverse(o=>{
     if(!(o as THREE.SkinnedMesh).isSkinnedMesh)return;const m=o as THREE.SkinnedMesh;
     m.skeleton.update();const p=m.geometry.getAttribute('position');
     for(let i=0;i<p.count;i++){if(Math.abs(p.getX(i))<.68)continue;
-     const v=new THREE.Vector3().fromBufferAttribute(p,i);m.applyBoneTransform(i,v);v.applyMatrix4(m.matrixWorld);
-     expect(v.y).toBeGreaterThan(.7875);expect(Number.isFinite(v.x+v.y+v.z)).toBe(true);
+     v.fromBufferAttribute(p,i);m.applyBoneTransform(i,v);v.applyMatrix4(m.matrixWorld);
+     minimumY=Math.min(minimumY,v.y);finite=finite&&Number.isFinite(v.x+v.y+v.z);
     }
    });
   }
+  expect(minimumY).toBeGreaterThan(.7875);expect(finite).toBe(true);
  });
  it('moves at every card release, presents after landing, and settles to idle',()=>{
   for(const phase of ['deal','flop','turn','river']){
