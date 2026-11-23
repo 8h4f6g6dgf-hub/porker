@@ -3,6 +3,8 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { tableSupportGeometry } from "./tableSupportGeometry";
 import { apronLightMap } from "./vipSurfaceTextures";
+import { DealerCharacter } from "./DealerCharacter";
+import { DEAL_TIMING } from "./dealerMotion";
 import { VipRoom } from "./VipRoom";
 import { tabletopGeometry } from "./pokerFurnitureGeometry";
 import { PokerFurniture } from "./PokerFurniture";
@@ -453,7 +455,7 @@ function Card({
     elapsed.current += dt;
     const p = reducedMotion
       ? 1
-      : THREE.MathUtils.clamp((elapsed.current - delay) / 0.75, 0, 1);
+      : THREE.MathUtils.clamp((elapsed.current - delay - DEAL_TIMING.release) / DEAL_TIMING.flight, 0, 1);
     const eased = 1 - Math.pow(1 - p, 3);
     // Keep existing cards centered smoothly when turn/river extends the row.
     destinationX.current = reducedMotion ? position[0]
@@ -537,7 +539,7 @@ function Cards(props: CasinoSceneProps) {
             rank={i === 0 ? "A" : "K"}
             suit="♥"
             face={props.revealed[i] ?? false}
-            delay={i * 0.48}
+            delay={i * DEAL_TIMING.holeGap}
             onClick={() => props.onReveal(i)}
             reducedMotion={props.reducedMotion}
           />
@@ -550,7 +552,7 @@ function Cards(props: CasinoSceneProps) {
           rank={ranks[i]}
           suit={suits[i]}
           face
-          delay={i < 3 ? i * 0.22 : 0}
+          delay={i < 3 ? i * DEAL_TIMING.flopGap : 0}
           reducedMotion={props.reducedMotion}
         />
       ))}
@@ -573,7 +575,7 @@ function SceneContents(props: CasinoSceneProps) {
       <VipRoom />
       <Table />
       <PokerFurniture />
-      <Dealer phase={props.phase} reducedMotion={props.reducedMotion} />
+      <DealerCharacter phase={props.phase} reducedMotion={props.reducedMotion} fallback={<Dealer phase={props.phase} reducedMotion={props.reducedMotion} />} />
       <Cards {...props} />
       <Chips />
     </>
