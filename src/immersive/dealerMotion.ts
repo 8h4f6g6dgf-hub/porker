@@ -24,30 +24,33 @@ export function createDealerRig(root:THREE.Group){
   const rest=new Map(bones.map(b=>[b,b.quaternion.clone()]));
   const get=(name:string)=>{const b=root.getObjectByName(name) as THREE.Bone;if(!b?.isBone)throw new Error(`Missing dealer joint ${name}`);return b;};
   const arms=['l','r'].map((s,i)=>({side:i===0?-1:1,upper:get(`upperarm_${s}`),lower:get(`lowerarm_${s}`),hand:get(`hand_${s}`),s}));
+  for(const arm of arms){arm.upper.position.y*=.88;arm.hand.scale.multiplyScalar(.92);}
   const spine=get('spine_02'),chest=get('spine_03');
   function pose(phase:string,time:number,reduced:boolean,dt=Infinity){
     const before=bones.map(b=>b.quaternion.clone());
     for(const b of bones)b.quaternion.copy(rest.get(b)!);
     const gesture=dealerGesture(phase,time,reduced),breath=reduced?0:Math.sin(time*.7)*.004;
-    spine.rotateX(-.18+breath);chest.rotateX(-.06);root.updateWorldMatrix(true,true);
+    spine.rotateX(-.26+breath);chest.rotateX(-.08);root.updateWorldMatrix(true,true);
     for(const arm of arms){
       const {side,upper,lower,hand}=arm;
       const active=side===-1;
-      const wrist=new THREE.Vector3(side*.38,.905,-1.64);
-      if(active){wrist.x+=gesture.reach*.22+gesture.present*.12;wrist.z+=gesture.reach*.065+gesture.present*.12;wrist.y+=gesture.reach*.035+gesture.present*.06;}
+      const wrist=new THREE.Vector3(side*.34,.823,-1.48);
+      if(active){wrist.x+=gesture.reach*.18+gesture.present*.12;wrist.z+=gesture.reach*.025+gesture.present*.12;wrist.y+=gesture.reach*.035+gesture.present*.06;}
       wrist.y+=breath*.8;
       const start=worldPosition(upper),elbowRest=worldPosition(lower),handRest=worldPosition(hand);
       const a=start.distanceTo(elbowRest),b=elbowRest.distanceTo(handRest),delta=wrist.clone().sub(start);
       const distance=Math.min(delta.length(),(a+b)*.985),d=delta.normalize();
-      const pole=new THREE.Vector3(side*.90,1.06,-1.98).sub(start);pole.addScaledVector(d,-pole.dot(d)).normalize();
+      const pole=new THREE.Vector3(side*.70,1.10,-1.95).sub(start);pole.addScaledVector(d,-pole.dot(d)).normalize();
       const along=(a*a-b*b+distance*distance)/(2*distance),height=Math.sqrt(Math.max(0,a*a-along*along));
       const elbow=start.clone().addScaledVector(d,along).addScaledVector(pole,height),target=start.clone().addScaledVector(d,distance);
       aim(upper,lower,elbow);aim(lower,hand,target);
-      const handWorld=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(0,-side,-side*.14).normalize(),new THREE.Vector3(0,-.14,1).normalize(),new THREE.Vector3(-side,0,0)));
+      const handWorld=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(0,-side,-side*.025).normalize(),new THREE.Vector3(0,-.025,1).normalize(),new THREE.Vector3(-side,0,0)));
       hand.quaternion.copy(hand.parent!.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(handWorld));
       // Mild knuckle flex; fingers are skinned bones, not independent pieces.
-      for(const finger of ['index','middle','ring','pinky'])for(const joint of ['01','02','03'])get(`${finger}_${joint}_${arm.s}`).rotateX(joint==='01'?-.04:-.05);
+      for(const finger of ['index','middle','ring','pinky'])for(const joint of ['01','02','03'])get(`${finger}_${joint}_${arm.s}`).rotateX(joint==='01'?-.015:-.02);
       hand.updateWorldMatrix(false,true);
+      const thumb=get(`thumb_01_${arm.s}`),thumbTip=get(`thumb_02_${arm.s}`);
+      aim(thumb,thumbTip,new THREE.Vector3(wrist.x-side*.11,wrist.y+.035,wrist.z+.17));
     }
     const blend=1-Math.exp(-25*dt);
     bones.forEach((b,i)=>b.quaternion.slerpQuaternions(before[i],b.quaternion.clone(),blend));

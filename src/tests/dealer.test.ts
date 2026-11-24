@@ -24,7 +24,7 @@ describe('rigged dealer',()=>{
  });
  it('keeps hand mesh above felt throughout idle, dealing and presenting',()=>{
   let minimumY=Infinity,finite=true;const v=new THREE.Vector3();
-  for(const phase of ['choose','deal','flop','turn','river'])for(let t=0;t<3;t+=.05){
+  for(const phase of ['choose','deal','flop','turn','river'])for(let t=0;t<(phase==='choose'?20:3);t+=.05){
    rig.pose(phase,t,false);rig.root.updateMatrixWorld(true);
    rig.root.traverse(o=>{
     if(!(o as THREE.SkinnedMesh).isSkinnedMesh)return;const m=o as THREE.SkinnedMesh;
@@ -36,6 +36,26 @@ describe('rigged dealer',()=>{
    });
   }
   expect(minimumY).toBeGreaterThan(.7875);expect(finite).toBe(true);
+ });
+ it('rests both hands flat on the felt with a narrower, balanced shoulder span',()=>{
+  rig.pose('choose',0,true);rig.root.updateMatrixWorld(true);
+  const at=(name:string)=>rig.root.getObjectByName(name)!.getWorldPosition(new THREE.Vector3());
+  const span=at('upperarm_l').distanceTo(at('upperarm_r'));
+  expect(span).toBeGreaterThan(.66);expect(span).toBeLessThan(.73);
+  for(const side of ['l','r']){
+   const wrist=at(`hand_${side}`),tip=at(`middle_04_leaf_${side}`),thumb=at(`thumb_04_leaf_${side}`);
+   expect(Math.abs(wrist.y-tip.y)).toBeLessThan(.03);
+   expect(wrist.z).toBeGreaterThan(-1.55);expect(tip.z).toBeGreaterThan(wrist.z);
+   expect(thumb.y-wrist.y).toBeLessThan(.06);
+  }
+  let minimumY=Infinity;
+  rig.root.traverse(o=>{if(!(o as THREE.SkinnedMesh).isSkinnedMesh)return;
+   const m=o as THREE.SkinnedMesh;m.skeleton.update();const p=m.geometry.getAttribute('position');
+   for(let i=0;i<p.count;i++){if(Math.abs(p.getX(i))<.72)continue;
+    const v=new THREE.Vector3().fromBufferAttribute(p,i);m.applyBoneTransform(i,v);v.applyMatrix4(m.matrixWorld);minimumY=Math.min(minimumY,v.y);
+   }
+  });
+  expect(minimumY-.7875).toBeGreaterThan(0);expect(minimumY-.7875).toBeLessThan(.012);
  });
  it('moves at every card release, presents after landing, and settles to idle',()=>{
   for(const phase of ['deal','flop','turn','river']){

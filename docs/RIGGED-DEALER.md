@@ -1,5 +1,7 @@
 # リグ付きディーラーの導入
 
+以下は初回導入時の記録。現在の体型・衣装・待機姿勢と最終検証は [ディーラー最終調整](DEALER-FINAL-POLISH.md) を参照。
+
 ## 素材と実装
 
 Quaternius Universal Base Characters の無料 Standard 版に含まれる `Superhero_Male_FullBody` を採用。CC0 1.0。公式出典と同梱ライセンスは `public/assets/dealer/README.md` と `License_Standard.txt` に保存。商用利用・改変・Web配信・公開リポジトリでの再配布が可能。有料 Source 版、Mixamo、有料APIは使用していない。
