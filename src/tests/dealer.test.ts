@@ -46,7 +46,7 @@ describe('rigged dealer',()=>{
    const wrist=at(`hand_${side}`),tip=at(`middle_04_leaf_${side}`),thumb=at(`thumb_04_leaf_${side}`);
    expect(Math.abs(wrist.y-tip.y)).toBeLessThan(.03);
    expect(wrist.z).toBeGreaterThan(-1.55);expect(tip.z).toBeGreaterThan(wrist.z);
-   expect(thumb.y-wrist.y).toBeLessThan(.06);
+   expect(thumb.y-wrist.y).toBeLessThan(.02);expect(thumb.y-wrist.y).toBeGreaterThan(-.05);
   }
   let minimumY=Infinity;
   rig.root.traverse(o=>{if(!(o as THREE.SkinnedMesh).isSkinnedMesh)return;
@@ -56,6 +56,34 @@ describe('rigged dealer',()=>{
    }
   });
   expect(minimumY-.7875).toBeGreaterThan(0);expect(minimumY-.7875).toBeLessThan(.012);
+ });
+ it('faces the player, keeps palms down and stands upright with relaxed elbows',()=>{
+  rig.pose('choose',0,true);rig.root.updateMatrixWorld(true);
+  expect(new THREE.Vector3(0,0,1).applyQuaternion(rig.root.quaternion).z).toBeGreaterThan(.99);
+  for(const arm of rig.arms){
+   const palm=new THREE.Vector3(arm.side,0,0).applyQuaternion(arm.hand.getWorldQuaternion(new THREE.Quaternion()));
+   expect(palm.y).toBeLessThan(-.99);
+   const shoulder=arm.upper.getWorldPosition(new THREE.Vector3()),elbow=arm.lower.getWorldPosition(new THREE.Vector3()),wrist=arm.hand.getWorldPosition(new THREE.Vector3());
+   expect(shoulder.y).toBeGreaterThan(1.68);expect(shoulder.y).toBeLessThan(1.82);
+   const angle=shoulder.clone().sub(elbow).angleTo(wrist.clone().sub(elbow))*180/Math.PI;
+   expect(angle).toBeGreaterThan(115);expect(angle).toBeLessThan(165);
+  }
+ });
+ it('keeps mirrored garment faces oriented consistently with their normals',()=>{
+  let checked=0;
+  rig.root.traverse(o=>{if(!(o as THREE.SkinnedMesh).isSkinnedMesh)return;
+   const m=o as THREE.SkinnedMesh,p=m.geometry.getAttribute('position'),n=m.geometry.getAttribute('normal'),ix=m.geometry.index!;
+   if(p.count===7281)return; // original body; inspect the generated clothing
+   const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3(),normal=new THREE.Vector3();
+   let minimum=Infinity;
+   for(let i=0;i<ix.count;i+=3){
+    const ai=ix.getX(i),bi=ix.getX(i+1),ci=ix.getX(i+2);
+    a.fromBufferAttribute(p,ai);b.fromBufferAttribute(p,bi).sub(a);c.fromBufferAttribute(p,ci).sub(a);
+    normal.fromBufferAttribute(n,ai).add(new THREE.Vector3().fromBufferAttribute(n,bi)).add(new THREE.Vector3().fromBufferAttribute(n,ci));
+    minimum=Math.min(minimum,b.cross(c).dot(normal));checked++;
+   }
+   expect(minimum).toBeGreaterThan(-1e-7);
+  });expect(checked).toBeGreaterThan(100);
  });
  it('moves at every card release, presents after landing, and settles to idle',()=>{
   for(const phase of ['deal','flop','turn','river']){
